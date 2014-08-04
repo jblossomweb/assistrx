@@ -71,5 +71,5 @@ Next I created a development branch, then committed this file.
 * Created a local branch called 'dev': `git checkout -b dev`
 * Created a markdown file for notes: `vim developer_notes.md`
 * Added to repo: `git add developer_notes.md`
-* Committed: `git commit -am 'developer notes'
+* Committed: `git commit -am 'developer notes'`
 * Pushed new branch to GitHub: `git push origin dev`
