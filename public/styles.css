@@ -1,0 +1,29 @@
+
+
+body {
+    width: 960px;
+    margin: 0 auto;
+}
+
+table {
+    width: 100%;
+    text-align: left;
+}
+
+table th, table td {
+    padding: 5px;
+}
+
+table th {
+    background: #CCC;
+}
+
+table tr:nth-child(2n) {
+    background: #eee;
+}
+
+table td {
+    border-left: 1px solid #ddd;
+}
+
+table td:first-child { border: none; }
