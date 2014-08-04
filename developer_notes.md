@@ -61,7 +61,7 @@ Next I had to connect the database.
 At first, I received an error, and quickly realized the db password cannot contain parenthesis.
 I had used a secure password generator. I generated a new password for the db user without parenthesis, and made the code change to `config/database.php`
 
-* Upon successful render of `http://arxtest.com/patients.php` I added the .gitignore, committed and pushed.
+* Upon successful render of http://local.arxtest.com/patients.php I added the .gitignore, committed and pushed.
 
 ###4. Branched for dev, created markdown file for notes
 
