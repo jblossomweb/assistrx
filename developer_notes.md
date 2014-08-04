@@ -1,4 +1,5 @@
-** Developer Notes **
+Developer Notes
+=========
 
 This is a step-by-step guide, outlining my approach to this project.
 I run Ubuntu 14 on my laptop, where I already have a running apache2/mysql/php5 stack.
