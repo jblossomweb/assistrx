@@ -19,7 +19,7 @@ Next, to make life easier, I created a local site for dev purposes.
 
 * Created config: `vim /etc/apache2/sites-available/local.arxtest.com.conf`:
 
-<code>
+```sh
 <VirtualHost *:80>
     <Directory "/var/www/html/assistrx">
         Options Indexes FollowSymLinks MultiViews
@@ -32,7 +32,7 @@ Next, to make life easier, I created a local site for dev purposes.
     ServerAlias local.arxtest.com
     ErrorLog "/var/log/apache2/assistrx-error.log"
 </VirtualHost>
-</code>
+```
 
 * Enabled the newly configured site: `a2ensite local.arxtest.com`
 * Restarted apache: `sudo service apache2 restart`
