@@ -18,7 +18,8 @@
  * NOTE: If you change these, also change the error_reporting() code below
  *
  */
-	define('ENVIRONMENT', 'development');
+	//define('ENVIRONMENT', 'development');
+	include 'env.php';
 /*
  *---------------------------------------------------------------
  * ERROR REPORTING
@@ -32,11 +33,13 @@ if (defined('ENVIRONMENT'))
 {
 	switch (ENVIRONMENT)
 	{
+		case 'local':
 		case 'development':
 			error_reporting(E_ALL);
 		break;
 	
-		case 'testing':
+		case 'qa':
+		case 'demo':
 		case 'production':
 			error_reporting(0);
 		break;
@@ -190,6 +193,8 @@ if (defined('ENVIRONMENT'))
 
 		define('APPPATH', BASEPATH.$application_folder.'/');
 	}
+
+
 
 /*
  * --------------------------------------------------------------------

@@ -1,0 +1,62 @@
+#logo a {
+	background:transparent;
+}
+
+#logo a img {
+	width: 25px;
+}
+
+#top-panel .panel-menu i{
+	background:transparent;
+}
+
+#top-panel .panel-menu span.badge{
+	margin-top:14px;
+}
+
+.client-form .select2-arrow,
+.complex-form .select2-arrow,
+.auditorium-form .select2-arrow,
+.user-form .select2-arrow,
+.group-form .select2-arrow,
+.package-form .select2-arrow {
+	width:25px !important;
+}
+
+.client-form .select2-arrow b,
+.complex-form .select2-arrow b,
+.auditorium-form .select2-arrow b,
+.user-form .select2-arrow b,
+.group-form .select2-arrow b,
+.package-form .select2-arrow b{
+	background:transparent !important;
+}
+div.lead.card p i{
+	width:2em;
+	text-align:center;
+
+}
+div.lead.card p span{
+	font-size:.7em !important;
+}
+
+
+.locking label{
+	cursor:pointer !important;
+}
+
+.locking label i.fa-lock{
+	color:#d15e5e !important;
+}
+.locking label i.fa-unlock{
+	color:#63cc9e !important;
+}
+
+#dashboard-header .btn-app span{
+	color: #428bca !important;
+}
+
+#dashboard-header .dashboard-row,
+#dashboard-header .btn-app{
+	margin-bottom:28px !important;
+}

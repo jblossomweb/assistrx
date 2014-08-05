@@ -36,6 +36,7 @@ define('FOPEN_READ_WRITE_CREATE',				'a+b');
 define('FOPEN_WRITE_CREATE_STRICT',				'xb');
 define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 
-
+//used for pw hashing combined with unique salt. never change it unless recycling all users (last resort).
+define('PW_PEPPER_STRING', "NG3CbK3DUKh5Tk2x0dCsEt')%cbUN~u#Kjmk;&3kEGwY0CNXx68s-wP;[du~K~NLqGA_+7notI4p4cYx");
 /* End of file constants.php */
 /* Location: ./application/config/constants.php */
