@@ -10,9 +10,8 @@ var save_song_function_maker = function(song) {
 // selects a song and it needs to save in the DB
 var save_song = function(song) {
 	var patient = form_data['patient'];
-	// why reinvent the wheel?
-	//for now, use legacy. backlog: port method into CI
-    $.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
+    //$.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
+    $.post('/admin/ajax/patients/song', {
         data : {
             patient_id : patient.id,
             song_data : song

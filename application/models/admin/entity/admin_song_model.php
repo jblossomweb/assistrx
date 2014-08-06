@@ -6,16 +6,73 @@ class admin_song_model extends CI_Model {
 		parent::__construct();
 		$this->load->database();
 	}
+
+	/**
+     * TODO: comment this function (save_song_for_patient)
+     *
+     * @author hopeful candadite
+     * @since  date
+     * @param  [type] $patient_id [description]
+     * @param  [type] $song_data [description]
+     * @return [type] [description]
+     */
+    public function associate($patient_id, $song_data){
+
+    	// if patient didn't exist, return some type of error
+    	if(!$this->patient_exists($patient_id)){
+    		return false;
+    	}
+    	$song_id = $this->exists($song_data);
+    	if(!$song_id){
+    		$song_id = $this->insert(array(
+	        	'song_name'   => $song_data['trackName'],
+	            'song_artist' => $song_data['artistName'],
+	            'song_data'   => json_encode($song_data)
+	        ));
+    	}
+        $this->db->where('patient_id', $patient_id);
+        $updated = $this->db->update('patients', array(
+				'favorite_song_id'	=>	$song_id
+		));
+		return $updated;
+    }
+
+    public function exists($song_data){
+    	if(is_array($song_data)){
+    		$song_data = json_encode($song_data);
+    	}
+    	$hash = md5($song_data);
+    	$this->db->where('song_hash',$hash);
+		$ar = $this->db->get('songs');
+		if($ar->num_rows > 0){
+			$this->load->library('artools');
+			$song = $this->artools->first_row($ar);
+			return $song['song_id'];
+		} else {
+			return false;
+		}
+    }
+
+    public function patient_exists($patient_id){
+    	$this->db->where('patient_id',$patient_id);
+		$ar = $this->db->get('patients');
+		if($ar->num_rows > 0){
+			return true;
+		} else {
+			return false;
+		}
+    }
 	
-	public function insert($data){
-		$data = $this->_validate($data);
-		if($data){
-			// $this->db->insert('patients', array(
-			// 	'patient_name'	=>	$data['name'],
-			// 	'patient_age'	=>	$data['age'],
-			// 	'patient_phone'	=>	$data['phone'],
-			// )); 
-			// return $this->db->insert_id();
+	public function insert($song){
+		//error_log(var_export($song,1));
+		$song = $this->_validate($song);
+		if($song){
+			$this->db->insert('songs', array(
+				'song_name'		=>	$song['song_name'],
+				'song_artist'	=>	$song['song_artist'],
+				'song_data'		=>	$song['song_data'],
+			)); 
+			return $this->db->insert_id();
 		}
 		return false;
 	}
@@ -72,16 +129,11 @@ class admin_song_model extends CI_Model {
 	}
 
 	private function _extract($song){
-		error_log('extract');
 		if(is_array($song)){
 			if(isset($song['data']) && !empty($song['data'])){
-				error_log('decoding data...');
 				$data = json_decode($song['data']);
-				error_log(var_export($data,1));
 				if(is_object($data)){
-					error_log('decoded to object:');
 					foreach($data as $k=>$val){
-						error_log($k.': '.$val);
 						$song[$k] = $val;
 					}
 				} 
@@ -93,14 +145,18 @@ class admin_song_model extends CI_Model {
 
 	private function _validate($data){
 		extract($data);
-		// if(empty($name) || !preg_match('/^[a-zA-Z0-9_\.\- ]+$/',$name)){
-		// 	//error_log("bad name");
-		// 	return false;
-		// }
-		// if(empty($artist) || !preg_match('/^[a-zA-Z0-9_\.\- ]+$/',$age)){
-		// 	//error_log("bad artist");
-		// 	return false;
-		// }
+		if(empty($song_name)){
+			//error_log("bad name");
+			return false;
+		}
+		if(empty($song_artist)){
+			//error_log("bad artist");
+			return false;
+		}
+		if(empty($song_data)){
+			//error_log("bad data");
+			return false;
+		}
 		return $data;
 	}
 

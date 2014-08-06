@@ -58,11 +58,19 @@ class admin_ajax_model extends CI_Model {
 			case 'song':
 				$this->load->model('admin/entity/admin_song_model','song');
 				// true indicates XSS filter
-				$song = $this->input->post(null,TRUE);
+				$song = $this->input->post('data',TRUE);
+				//error_log(var_export($song,1));
 				if($song){
-					//$patient['id'] = $this->patient->update($patient['id'],$patient);
+					if(isset($song['patient_id']) && isset($song['song_data'])){
+						$return = $this->song->associate(
+							$song['patient_id'], 
+							$song['song_data']
+						);
+					} else {
+						$return = false; //todo: error msg
+					}
 					$data = array(
-						'return'	=>	json_encode($patient),
+						'return'	=>	json_encode($return),
 						'form'		=>	false,
 					);
 				} else {
