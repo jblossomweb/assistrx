@@ -60,3 +60,21 @@ div.lead.card p span{
 #dashboard-header .btn-app{
 	margin-bottom:28px !important;
 }
+
+
+li.song{
+	cursor:pointer;
+	width:100%;
+	white-space: nowrap;
+  	overflow: hidden;
+	text-overflow: ellipsis;
+	text-decoration:none;
+	color:#428bca;
+}
+li.song:hover{
+	text-decoration: underline;
+}
+
+span.stream-url{
+	display:none;
+}

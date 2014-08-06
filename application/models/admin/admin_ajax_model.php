@@ -55,21 +55,30 @@ class admin_ajax_model extends CI_Model {
 					}
 				}
 			break;
-			case 'delete':
+			case 'song':
+				$this->load->model('admin/entity/admin_song_model','song');
 				// true indicates XSS filter
-				$id = $this->input->post('id',TRUE);
-				if($id){
-					if($this->patient->delete($id)){
+				$song = $this->input->post(null,TRUE);
+				if($song){
+					//$patient['id'] = $this->patient->update($patient['id'],$patient);
+					$data = array(
+						'return'	=>	json_encode($patient),
+						'form'		=>	false,
+					);
+				} else {
+					$id = $this->input->get('id',TRUE);
+					if(intval($id)){
+						$patient = $this->patient->select($id);
+						$song = $this->song->select_by_patient($id);
 						$data = array(
-							'id'		=>	$id,
-							'deleted'	=>	true
+							'patient'	=>	$patient,
+							'song'		=>	$song,
+							'form'		=>	true,
 						);
-						break;
+					} else {
+						redirect('admin/ajax/patients');
 					}
 				}
-				$data = array(
-					'deleted'	=>	false
-				);
 			break;
 			case 'list':
 			default:

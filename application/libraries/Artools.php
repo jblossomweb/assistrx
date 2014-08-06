@@ -15,7 +15,7 @@ class Artools extends Base{
 		if(is_object($ar) && $ar->num_rows()){
 			return array_shift($ar->row_array());
 		} else {
-			return $this->respond_error($this->db->get_error());
+			return $this->respond_error($this->db->_error_message());
 		}
 	}
 
@@ -23,7 +23,7 @@ class Artools extends Base{
 		if(is_object($ar) && $ar->num_rows()){
 			return $ar->row_array();
 		} else {
-			return $this->respond_error($this->db->get_error());
+			return $this->respond_error($this->db->_error_message());
 		}
 	}
 
@@ -31,7 +31,7 @@ class Artools extends Base{
 		if(is_object($ar) && $ar->num_rows()){
 			return $ar->result_array();
 		} else {
-			return $this->respond_error($this->db->get_error());
+			return $this->respond_error($this->db->_error_message());
 		}
 	}
 

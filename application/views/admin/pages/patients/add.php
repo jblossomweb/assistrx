@@ -9,7 +9,7 @@
 		<div class="box">
 			<div class="box-header">
 				<div class="box-name">
-					<i class="fa fa-users"></i>
+					<i class="fa fa-user"></i>
 					<span>Add New Patient</span>
 				</div>
 				<div class="box-icons">

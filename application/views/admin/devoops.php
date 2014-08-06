@@ -15,6 +15,7 @@
 		<link href="../assets/devoops/plugins/xcharts/xcharts.min.css" rel="stylesheet">
 		<link href="../assets/devoops/plugins/select2/select2.css" rel="stylesheet">
 		<link href="../assets/devoops/css/style.min.css" rel="stylesheet">
+		<link href="../assets/css/flat.audio.css" rel="stylesheet">
 		<link href="../assets/css/admin/font.css" rel="stylesheet">
 		<link href="../assets/css/admin/style.css" rel="stylesheet">
 		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->

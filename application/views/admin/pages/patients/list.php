@@ -51,7 +51,7 @@
 							<td>
 								<a alt="edit" title="edit" style="cursor:pointer;" onclick="LoadAjaxContent('/admin/ajax/patients/edit?id=<?php echo $patient['id']; ?>');"><i class="fa fa-edit"></i></a>
 								&nbsp;&nbsp;
-								<a alt="music" title="music" style="cursor:pointer;" onclick="LoadAjaxContent('/admin/ajax/patients/music?id=<?php echo $patient['id']; ?>');"><i class="fa fa-music"></i></a>
+								<a alt="song" title="song" style="cursor:pointer;" onclick="LoadAjaxContent('/admin/ajax/patients/song?id=<?php echo $patient['id']; ?>');"><i class="fa fa-music"></i></a>
 								<?php /*
 								&nbsp;&nbsp;
 								<a style="cursor:pointer;" onclick="deleteRecord('patients',<?php echo $patient['id']; ?>);"><i class="fa fa-times"></i></a>

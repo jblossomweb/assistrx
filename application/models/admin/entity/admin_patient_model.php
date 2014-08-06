@@ -81,7 +81,7 @@ class admin_patient_model extends CI_Model {
 			return false;
 		}
 		if(empty($phone) || !preg_match('/^[0-9\-]+$/',$phone)){
-			error_log("bad phone");
+			//error_log("bad phone");
 			return false;
 		}
 		return $data;
