@@ -35,9 +35,6 @@
 <script id="patient-song-form-template" type="text/x-handlebars-template">
 <?php $this->load->view('admin/pages/patients/song-form');?>
 </script>
-<script id="itunes-result-template" type="text/x-handlebars-template">
-<?php $this->load->view('admin/templates/fields/itunes-result');?>
-</script>
 
 <script type="text/javascript">
 var form_selector = "#frmEditPatientSong";
@@ -105,10 +102,6 @@ $(document).ready(function() {
 			$.getScript('/assets/js/admin/itunes-search.js', function(){
 				//
 			});
-
-			//$.getScript('/assets/js/jquery.jplayer.js', function(){
-
-			//});
 
 		});
 	});

@@ -22,4 +22,4 @@
 		'icon'	=>	"fa-phone",
 	));?>
 </fieldset>
-<?php $this->load->view('admin/templates/blocks/cancel-submit');?>
+<?php $this->load->view('admin/templates/blocks/select-song');?>

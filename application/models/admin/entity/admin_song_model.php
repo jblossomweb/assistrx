@@ -17,7 +17,6 @@ class admin_song_model extends CI_Model {
      * @return [type] [description]
      */
     public function associate($patient_id, $song_data){
-
     	// if patient didn't exist, return some type of error
     	if(!$this->patient_exists($patient_id)){
     		return false;
