@@ -33,7 +33,37 @@ class admin_song_model extends CI_Model {
         $updated = $this->db->update('patients', array(
 				'favorite_song_id'	=>	$song_id
 		));
+		$this->cleanup();
 		return $updated;
+    }
+
+
+    public function cleanup(){
+    	/*
+    	DELETE
+    	FROM 
+    		songs 
+    	WHERE song_id NOT IN (
+			SELECT 
+				DISTINCT favorite_song_id 
+			FROM 
+				patients 
+			WHERE 
+				favorite_song_id IS NOT NULL
+    	)
+    	*/
+		$this->db->distinct();
+    	$this->db->select('favorite_song_id');
+    	$this->db->from('patients');
+    	$this->db->where('favorite_song_id IS NOT NULL');
+		$ar = $this->db->get();
+		$result = $ar->result_array();
+		$sub = array();
+		foreach($result as $r){
+			$sub[] = $r['favorite_song_id'];
+		}
+		$this->db->where_not_in('song_id', $sub);
+		$this->db->delete('songs');
     }
 
     public function exists($song_data){
@@ -63,7 +93,6 @@ class admin_song_model extends CI_Model {
     }
 	
 	public function insert($song){
-		//error_log(var_export($song,1));
 		$song = $this->_validate($song);
 		if($song){
 			$this->db->insert('songs', array(
