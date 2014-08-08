@@ -684,8 +684,8 @@ var validatePatient = function(){
 			        //console.log(data);
 			        spinner.hide();
 			        //form.fadeOut("fast");
-			        LoadAjaxContent('/admin/ajax/patients/edit?id='+data.id);
-			        //LoadAjaxContent('/admin/ajax/patients');
+			        //LoadAjaxContent('/admin/ajax/patients/edit?id='+data.id);
+			        LoadAjaxContent('/admin/ajax/patients');
 			    }
 		    });
 		}
@@ -766,4 +766,192 @@ $(document).ready(function() {
 <?php endif; ?>
 ```
 
+With that, now we can add patients to the database using the admin form.
+
+###11. Edit Patient
+
+Since we have an add patient form, we will go ahead and build the edit page as well, re-using the same form.
+
+* First I added the patients edit page, similar to the add page, with some differences. 
+(in hindsight, I could have wrapped a lot of this redundant html into another template)
+
+```sh
+vim application/views/admin/pages/patients/edit.php
+```
+
+```html
+<?php if(!$form):?>
+<?php echo $return; ?>
+<?php else: ?>
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<div class="row">
+	<div class="col-xs-12 col-sm-12">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-name">
+					<i class="fa fa-user"></i>
+					<span><?php echo $patient['name'];?></span>
+				</div>
+				<div class="box-icons">
+					<a class="collapse-link">
+						<i class="fa fa-chevron-up"></i>
+					</a>
+					<a class="expand-link">
+						<i class="fa fa-expand"></i>
+					</a>
+					<a class="close-link">
+						<i class="fa fa-times"></i>
+					</a>
+				</div>
+				<div class="no-move"></div>
+			</div>
+			<div class="box-content">
+				<form id="frmEditPatient" method="post" action="/admin/ajax/patients/edit" class="form-horizontal"></form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script id="patient-form-template" type="text/x-handlebars-template">
+<?php $this->load->view('admin/pages/patients/form');?>
+</script>
+<?php $this->load->view('admin/pages/patients/validate');?>
+
+<script type="text/javascript">
+function lockField(name){
+	$(":input[name='"+name+"']").prop('disabled', true);
+	$("."+name+" label i").removeClass("fa-unlock").addClass("fa-lock");
+	$("."+name+" label").addClass("locked").attr('title','unlock');
+}
+function unlockField(name){
+	$(":input[name='"+name+"']").prop('disabled', false);
+	$("."+name+" label i").removeClass("fa-lock").addClass("fa-unlock");
+	$("."+name+" label").removeClass("locked").attr('title','lock');
+}
+</script>
+
+<script type="text/javascript">
+var form_selector = "#frmEditPatient";
+var form_template = "#patient-form-template";
+var form_data = {
+	  <?php if(!empty($patient['name'])): ?>
+	  patient: {
+	  	id: "<?php echo $patient['id'];?>",
+	  	name: "<?php echo $patient['name'];?>",
+	  	age: "<?php echo $patient['age'];?>",
+	  	phone: "<?php echo $patient['phone'];?>"
+	  }<?php endif;?>
+};
+$(document).ready(function() {
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "patients", title: "Patients"},
+	    	{page: "patients/edit?id=<?php echo $patient['id'];?>", title: "Edit"}
+		 ]);
+		renderTemplate(form_template,form_selector,form_data);
+		$.getScript('/assets/js/admin/guts-form.js', function(){
+			loadForm(validatePatient);
+
+			$(".locking label").click(function(){
+				var field = $(this).next('div').children(':input').attr('name');
+				if($(this).hasClass("locked")){
+					unlockField(field);
+				} else {
+					lockField(field);
+				}
+			});
+			$(".locking label").click();
+
+		});
+	});
+});
+</script>
+<?php endif; ?>
+```
+
+* And since the other components are already in place, all we have to do now is write the code-behind into the ajax model (acts like a controller):
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+
+```php
+case 'edit':
+	// true indicates XSS filter
+	$patient = $this->input->post(null,TRUE);
+	if($patient){
+		$patient['id'] = $this->patient->update($patient['id'],$patient);
+		$data = array(
+			'return'	=>	json_encode($patient),
+			'form'		=>	false,
+		);
+	} else {
+		$id = $this->input->get('id',TRUE);
+		if(intval($id)){
+			$patient = $this->patient->select($id);
+			$data = array(
+				'patient'	=>	$patient,
+				'form'		=>	true,
+			);
+		} else {
+			redirect('admin/ajax/patients');
+		}
+	}
+break;
+```
+
+* and then write the select and update methods into the entity model:
+
+```sh
+vim application/models/admin/entity/admin_patient_model.php
+```
+
+```php
+public function update($id,$data){
+	$data = $this->_validate($data);
+	if($data){
+		$this->db->where('patient_id', $id);
+		if($this->db->update('patients', array(
+			'patient_name'	=>	$data['name'],
+			'patient_age'	=>	$data['age'],
+			'patient_phone'	=>	$data['phone'],
+		))){
+			return $id;
+		}
+		return false;
+	}
+	return false;
+}
+
+public function select($id){
+	if($id){
+		$this->db->select('
+			patient_id as id, 
+			patient_name as name, 
+			patient_phone as phone, 
+			patient_age as age
+		');
+		$this->db->where('patient_id', $id);
+		$ar = $this->db->get('patients');
+		$this->load->library('artools');
+		return $this->artools->first_row($ar);
+	}
+	return false;
+}
+```
+
+* Now that we have a working edit page, I changed where the form redirects after submit:
+
+```sh
+vim application/views/admin/pages/patients/validate.php
+```
+```js
+LoadAjaxContent('/admin/ajax/patients/edit?id='+data.id);
+//LoadAjaxContent('/admin/ajax/patients');
+```
+
+And now we have full CRUD (minus the 'D' since there is no documented need to delete)
 
