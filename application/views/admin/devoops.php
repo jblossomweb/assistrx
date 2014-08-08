@@ -143,20 +143,20 @@
 				</li>
 				<li class="dropdown">
 					<a class="dropdown-toggle" style="cursor:pointer;">
-						<i class="fa fa-music"></i>
-						<span class="hidden-xs">Songs</span>
+						<i class="fa fa-file-text-o"></i>
+						<span class="hidden-xs">Reports</span>
 					</a>
 					<ul class="dropdown-menu">
 						<li>
-                            <a class="ajax-link" href="/admin/ajax/songs">
-                                <i class="fa fa-list"></i>
-                                <span class="hidden-xs">List</span>
+                            <a class="ajax-link" href="/admin/ajax/reports/songs">
+                                <i class="fa fa-music"></i>
+                                <span class="hidden-xs">Chosen Songs</span>
                             </a>
                         </li>
 						<li>
-                            <a class="ajax-link" href="/admin/ajax/songs/add">
-                                <i class="fa fa-plus"></i>
-                                <span class="hidden-xs">Add New</span>
+                            <a class="ajax-link" href="/admin/ajax/reports/genres">
+                                <i class="fa fa-headphones"></i>
+                                <span class="hidden-xs">Age Genres</span>
                             </a>
                         </li>
 					</ul>
