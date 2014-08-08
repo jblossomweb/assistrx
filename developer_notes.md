@@ -953,5 +953,10 @@ LoadAjaxContent('/admin/ajax/patients/edit?id='+data.id);
 //LoadAjaxContent('/admin/ajax/patients');
 ```
 
-And now we have full CRUD (minus the 'D' since there is no documented need to delete)
+And now we have full CRUD for patients. (minus the 'D' since there is no documented need to delete)
+
+
+###12. Assign Song to Patient
+
+The next thing to build was the song page, to match the functionality of legacy songs.php
 
