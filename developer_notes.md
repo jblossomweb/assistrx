@@ -425,3 +425,151 @@ $(document).ready(function() {
 ```
 
 With this, there was now a working patients list page, pulling from the database.
+
+###10. Add new patient
+
+Although it wasn't a requirement, I thought it would be a nice touch.
+I had some existing code that was easily repurposed.
+
+* First, I added the menu item html to the outer devoops template, nested under 'Patients':
+
+```sh
+vim application/views/admin/devoops.php
+```
+
+```html
+<li>
+    <a class="ajax-link" href="/admin/ajax/patients/add">
+        <i class="fa fa-plus"></i>
+        <span class="hidden-xs">Add New</span>
+    </a>
+</li>
+
+```
+* Next, I built out the 'add' condition within the 'patients' method in the admin ajax model:
+
+```sh
+vim application/model/admin_ajax_model.php
+```
+
+```php
+case 'add':
+	// true indicates XSS filter
+	$patient = $this->input->post(null,TRUE);
+	if($patient){
+		$patient['id'] = $this->patient->insert($patient);
+		$data = array(
+			'return'	=>	json_encode($patient),
+			'form'		=>	false,
+		);
+	} else {
+		$data = array(
+			'form'		=>	true,
+		);
+	}
+break;
+
+```
+
+* Then I added the 'insert' method to the admin patient entity model:
+
+
+```sh
+vim application/models/admin/entity/admin_patient_model.php
+```
+
+```php
+public function insert($data){
+	$data = $this->_validate($data);
+	if($data){
+		$this->db->insert('patients', array(
+			'patient_name'	=>	$data['name'],
+			'patient_age'	=>	$data['age'],
+			'patient_phone'	=>	$data['phone'],
+		)); 
+		return $this->db->insert_id();
+	}
+	return false;
+}
+
+```
+
+* Now I needed a form. Since it will be later shared with the edit page, I built it as a dynamically-served handlebars template:
+
+```sh
+vim application/views/admin/pages/patients/form.php
+```
+
+```html
+{{#if patient.id}}
+<input class="hidden" name="id" value="{{patient.id}}" />
+{{/if}}
+<fieldset class="patient-form">
+	<legend>Patient Info</legend>
+	<?php $this->load->view('admin/templates/fields/text',array(
+		'label'	=>	"Patient Name",
+		'name'	=>	"name",
+		'value'	=>	"{{patient.name}}",
+		'icon'	=>	"fa-user",
+	));?>
+	<?php $this->load->view('admin/templates/fields/number',array(
+		'label'	=>	"Age",
+		'name'	=>	"age",
+		'value'	=>	"{{patient.age}}",
+		'icon'	=>	"fa-calendar",
+	));?>
+	<?php $this->load->view('admin/templates/fields/text',array(
+		'label'	=>	"Phone",
+		'name'	=>	"phone",
+		'value'	=>	"{{patient.phone}}",
+		'icon'	=>	"fa-phone",
+	));?>
+</fieldset>
+<?php $this->load->view('admin/templates/blocks/cancel-submit');?>
+```
+
+```sh
+vim application/views/admin/templates/fields/text.php
+```
+
+```html
+<div class="form-group locking <?php echo $name; ?> has-feedback">
+	<label class="col-sm-3 control-label"><i class="fa fa-unlock"></i>&nbsp;<?php echo $label; ?></label>
+	<div class="col-sm-5">
+		<input type="text" class="form-control" name="<?php echo $name; ?>" value="<?php echo $value; ?>" />
+		<span class="fa <?php echo $icon; ?> form-control-feedback"></span>
+	</div>
+</div>
+```
+
+```sh
+vim application/views/admin/templates/fields/number.php
+```
+
+```html
+<div class="form-group locking <?php echo $name; ?> has-feedback">
+	<label class="col-sm-3 control-label"><i class="fa fa-unlock"></i>&nbsp;<?php echo $label; ?></label>
+	<div class="col-sm-5">
+		<input type="number" class="form-control" name="<?php echo $name; ?>" value="<?php echo $value; ?>" />
+		<span class="fa <?php echo $icon; ?> form-control-feedback"></span>
+	</div>
+</div>
+```
+
+```sh
+vim application/views/admin/templates/blocks/cancel-submit.php
+```
+
+```html
+<div class="form-group">
+	<div class="col-sm-9 col-sm-offset-3">
+		<button class="btn btn-danger cancel"><i class="fa fa-undo"></i> Go Back</button>
+		<button type="submit" class="btn btn-success submit"><i class="fa fa-save"></i> Save</button>
+		<i class="fa fa-spinner fa-spin" style="display:none;"></i>
+	</div>
+</div>
+```
+
+* Now that the form was in place, I could use it to build the add patient page:
+
+
