@@ -471,7 +471,7 @@ break;
 
 ```
 
-* Then I added the 'insert' method to the admin patient entity model:
+* Then I added the 'insert' and '_validate' methods to the admin patient entity model:
 
 
 ```sh
@@ -493,8 +493,26 @@ public function insert($data){
 }
 
 ```
+```php
+private function _validate($data){
+	extract($data);
+	if(empty($name) || !preg_match('/^[a-zA-Z0-9_\.\- ]+$/',$name)){
+		//error_log("bad name");
+		return false;
+	}
+	if(empty($age) || !preg_match('/^[0-9]+$/',$age)){
+		//error_log("bad age");
+		return false;
+	}
+	if(empty($phone) || !preg_match('/^[0-9\-]+$/',$phone)){
+		//error_log("bad phone");
+		return false;
+	}
+	return $data;
+}
+```
 
-* Now I needed a form. Since it will be later shared with the edit page, I built it as a dynamically-served handlebars template:
+* Now I needed a form. Since it was to be later shared with the edit page, I built it as a dynamically-served handlebars template (weird, I know. It was late at night):
 
 ```sh
 vim application/views/admin/pages/patients/form.php
@@ -570,6 +588,182 @@ vim application/views/admin/templates/blocks/cancel-submit.php
 </div>
 ```
 
+* Next, I built the client-side validation script. Even though it is javascript, I decided to load it as a view, to keep the patients stuff in the same folder, and establish that as convention.
+
+```sh
+vim application/views/admin/pages/patients/validate.php
+```
+Notice the regexes should match the corresponding server-side validation from above `_validate()`
+
+```html
+<script type="text/javascript">
+var validatePatient = function(){
+	var form = $(form_selector);
+	var inputs = $(form_selector+" :input");
+	var btn = $(form_selector+' button.submit');
+	var cancel = $(form_selector+' button.cancel');
+	var spinner = $(form_selector+' .fa-spin');
+	var song = $(form_selector+' button.song');
+	var pid = $(form_selector+' :input[name=id]').val();
+
+	cancel.click(function(e){
+		e.preventDefault();
+		LoadAjaxContent('/admin/ajax/patients');
+	});
+
+	song.click(function(e){
+		e.preventDefault();
+		LoadAjaxContent('/admin/ajax/patients/song?id='+pid);
+	});
+
+	form.bootstrapValidator({
+		message: 'This value is not valid',
+		fields: {
+			name: {
+				message: 'Please enter a valid Patient Name',
+				validators: {
+					notEmpty: {
+						message: 'The Patient Name is required and cannot be empty'
+					},
+					stringLength: {
+						min: 1,
+						max: 50,
+						message: 'The Patient Name must be between 1-50 characters long'
+					},
+					regexp: {
+						regexp: /^[a-zA-Z0-9_\.\- ]+$/,
+						message: 'No special characters, please. Letters, Numbers, Space, Dot, Dash or Underscore'
+					}
+				}
+			},
+			phone: {
+				message: 'Please enter a valid Patient Phone',
+				validators: {
+					notEmpty: {
+						message: 'The Patient Phone is required and cannot be empty'
+					},
+					phone: {
+						message: 'Please enter a valid phone number (XXX-XXX-XXXX)'
+					},
+					regexp: {
+						regexp: /^[0-9\-]+$/,
+						message: 'Numbers and dashes only'
+					}
+				}
+			},
+			age: {
+				message: 'Please enter a valid Age',
+				validators: {
+					notEmpty: {
+						message: 'The Age is required and cannot be empty'
+					},
+					integer: {
+						message: 'Numbers only' 
+					},
+					regexp: {
+						regexp: /^[0-9]+$/,
+						message: 'Numbers only'
+					}
+				}
+			}
+			
+		},
+		submitHandler: function(){
+			inputs.prop("disabled", true);
+			spinner.show();
+			form.ajaxSubmit({
+				data: {
+					id: 		form.find(":input[name='id']").val(), 
+					name: 		form.find(":input[name='name']").val(), 
+					age: 		form.find(":input[name='age']").val(),
+					phone: 		form.find(":input[name='phone']").val(),  
+				},
+				success: function(data) { 
+					//console.log(data);
+					data = $.parseJSON(data);
+			        //console.log(data);
+			        spinner.hide();
+			        //form.fadeOut("fast");
+			        LoadAjaxContent('/admin/ajax/patients/edit?id='+data.id);
+			        //LoadAjaxContent('/admin/ajax/patients');
+			    }
+		    });
+		}
+	}); 
+};
+</script>
+```
+
 * Now that the form was in place, I could use it to build the add patient page:
+
+```sh
+vim application/views/admin/pages/patients/add.php
+```
+
+```html
+<?php if(!$form):?>
+<?php echo $return; ?>
+<?php else: ?>
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<div class="row">
+	<div class="col-xs-12 col-sm-12">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-name">
+					<i class="fa fa-user"></i>
+					<span>Add New Patient</span>
+				</div>
+				<div class="box-icons">
+					<a class="collapse-link">
+						<i class="fa fa-chevron-up"></i>
+					</a>
+					<a class="expand-link">
+						<i class="fa fa-expand"></i>
+					</a>
+					<a class="close-link">
+						<i class="fa fa-times"></i>
+					</a>
+				</div>
+				<div class="no-move"></div>
+			</div>
+			<div class="box-content">
+				<form id="frmAddPatient" method="post" action="/admin/ajax/patients/add" class="form-horizontal"></form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script id="patient-form-template" type="text/x-handlebars-template">
+<?php $this->load->view('admin/pages/patients/form');?>
+</script>
+<?php $this->load->view('admin/pages/patients/validate');?>
+
+<script type="text/javascript">
+var form_selector = "#frmAddPatient";
+var form_template = "#patient-form-template";
+var form_data = {
+	  <?php if(!empty($patient['name'])): ?>,
+	  patient: {
+	  	name: "<?php echo $patient['name'];?>"
+	  }<?php endif;?>
+};
+$(document).ready(function() {
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "patients", title: "Patients"},
+	    	{page: "patients/add", title: "Add New"}
+		 ]);
+		renderTemplate(form_template,form_selector,form_data);
+		$.getScript('/assets/js/admin/guts-form.js', function(){
+			loadForm(validatePatient);
+		});
+	});
+});
+</script>
+<?php endif; ?>
+```
 
 
