@@ -4,15 +4,25 @@ Developer Notes
 This is a step-by-step guide, outlining my approach to this project.
 I run Ubuntu 14 on my laptop, where I already have a running apache2/mysql/php5 stack.
 
+I am also keeping track of this project with GitHub and JIRA Agile:
+
+https://github.com/jblossomweb/assistrx/
+
+https://github.com/jblossomweb/assistrx/tree/dev
+
+https://jbzzle.atlassian.net/browse/ARX/
+
+=========
+
 ###1. Downloaded supplied codebase, initialized repository
 
 First, I needed to download the file, and put the contents in my web root.
 
-* Unzipped the file AssistRx-Test.zip
-* Copied its contents to /var/www/html/assistrx
-* Performed a git init locally
+* Unzipped the file `AssistRx-Test.zip`
+* Copied its contents to `/var/www/html/assistrx`
+* Performed a `git init` locally
 * created a public repo origin on GitHub: https://github.com/jblossomweb/assistrx
-* added all files as initial commit, pushed local repo to origin
+* added all files as initial commit, pushed local repo to origin (GitHub)
 
 ###2. Created and enabled site for Apache, local clients as `local.arxtest.com`
 
@@ -39,9 +49,9 @@ Next, to make life easier, I created a local site for dev purposes.
 * Restarted apache: `sudo service apache2 restart`
 * Bypassed DNS on local by adding to host file `sudo vim /etc/hosts`:
 
-<code>
+```sh
 192.168.X.X	local.arxtest.com
-</code>
+```
 
 * Added same line to Windows 7 client I use on same network for IE 8/9 testing. (`C:\Windows\System32\drivers\etc
 hosts`)
@@ -92,3 +102,108 @@ Next, I installed CodeIgniter:
 
 * Downloaded a fresh copy of version 2.2 from <a href="https://ellislab.com/codeigniter">https://ellislab.com/codeigniter</a>
 * Unzipped into `/var/www/html/assistrx`
+* Added to repo: `git add *`
+* Committed: `git commit -am 'preserve legacy app, init codeigniter'`
+* Pushed branch to GitHub: `git push`
+
+###6. Cleaned the URL
+
+CodeIgniter's front controller is index.php, and one can mask this to make nice, pretty, REST-like URLs.
+I used the standard .htaccess for this.
+
+* Navigated to project webroot: `cd /var/www/html/assistrx`
+* Created file '.htaccess': `vim .htaccess`
+
+```sh
++Options +FollowSymLinks
++Options +Indexes
++RewriteEngine On
++RewriteCond %{REQUEST_FILENAME} !-f
++RewriteCond %{REQUEST_FILENAME} !-d
++RewriteCond $1 !^(index\.php|images|robots\.txt)
++RewriteRule ^(.*)$ index.php/$1 [L]
+```
+
+* add to repo: `git add .htaccess`
+* commit: `git commit -am 'htaccess to clean index.php from url'`
+* Pushed branch to GitHub: `git push`
+
+###7. Integrate Devoops skin, and my Admin platform
+
+Next, I ported over the controllers, model classes, views, and css/js from the Admin platform that I had built previously, using a skin provided by Devoops.
+
+Credit for the theme: https://github.com/devoopsme/devoops/
+
+* the theme resides in `/var/www/html/assistrx/assets/devoops`
+* I added my code files and edited them as necessary:
+
+```
+application/config/autoload.php
+application/config/config.php
+application/config/constants.php
+application/config/database.example.php
+application/config/database.php
+application/config/email.example.php
+application/controllers/admin.php
+application/controllers/cli.php
+application/controllers/cli/cli_admin.php
+application/core/MY_Loader.php
+application/core/MY_Router.php
+application/libraries/Artools.php
+application/libraries/Base.php
+application/libraries/Password.php
+application/models/admin/admin_admin_user_model.php
+application/models/admin/admin_ajax_model.php
+application/models/admin/admin_login_model.php
+application/third_party/MX/Base.php
+application/third_party/MX/Ci.php
+application/third_party/MX/Config.php
+application/third_party/MX/Controller.php
+application/third_party/MX/Lang.php
+application/third_party/MX/Loader.php
+application/third_party/MX/Modules.php
+application/third_party/MX/Router.php
+application/views/admin/dashboard.php
+application/views/admin/devoops.php
+application/views/admin/index.html
+application/views/admin/login.php
+application/views/admin/templates.php
+application/views/admin/templates/blocks/cancel-submit.php
+application/views/admin/templates/blocks/guts-loader.php
+application/views/admin/templates/breadcrumbs.php
+application/views/admin/templates/fields/number.php
+application/views/admin/templates/fields/text.php
+application/views/admin/templates/index.html
+application/views/email/boilerplate.php
+application/views/email/index.html
+application/views/email/new_admin_user.php
+application/views/email/new_admin_user_plain.php
+assets/css/admin/font.css
+assets/css/admin/style.css
+assets/fonts/MyriadPro-Regular.otf
+assets/images/admin/pbar-ani.gif
+assets/images/admin/thumbs/donkeykong.png
+assets/images/admin/thumbs/flower.png
+assets/images/admin/thumbs/mario.png
+assets/images/admin/thumbs/megaman.png
+assets/images/admin/thumbs/qbert.png
+assets/images/logo.png
+assets/images/logo_w.png
+assets/js/admin/dashboard.js
+assets/js/admin/devoops-constants.js
+assets/js/admin/guts-form.js
+assets/js/admin/guts-global.js
+assets/js/admin/guts-list.js
+assets/js/admin/login.js
+assets/js/handlebars-v1.3.0.js
+assets/js/jquery.form.js
+assets/js/jquery.form.min.js
+env.php
+favicon.ico
+index.php
+```
+
+I did this all at once, along with other steps, so the commit was huge:
+https://github.com/jblossomweb/assistrx/commit/7149d2f475d5b60f1ace924fa35537962e47cdfb
+
+
