@@ -74,3 +74,21 @@ Next I created a development branch, then committed this file.
 * Added to repo: `git add developer_notes.md`
 * Committed: `git commit -am 'developer notes'`
 * Pushed new branch to GitHub: `git push origin dev`
+
+###5. Installed CodeIgniter MVC framework
+
+At this point, since it was allowed, I decided that I wanted to take the time to overhaul the entire project.
+
+I had built an admin panel with a really nice skin and ajax sub-framework into <a href="https://ellislab.com/codeigniter">CodeIgniter</a> for a previous project.
+I figured this would bring the needed bells and whistles, and show off the portability of previously written classes.
+
+First, I wanted to isolate and preserve the legacy codebase:
+
+* Navigated to project webroot: `cd /var/www/html/assistrx`
+* Created directory 'legacy': `mkdir legacy`
+* Copied all existing files into legacy.
+
+Next, I installed CodeIgniter:
+
+* Downloaded a fresh copy of version 2.2 from <a href="https://ellislab.com/codeigniter">https://ellislab.com/codeigniter</a>
+* Unzipped into `/var/www/html/assistrx`
