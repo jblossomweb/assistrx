@@ -137,7 +137,7 @@ Credit for the theme: https://github.com/devoopsme/devoops/
 * the theme resides in `/var/www/html/assistrx/assets/devoops`
 * I added my code files and edited them as necessary:
 
-```
+```sh
 application/config/autoload.php
 application/config/config.php
 application/config/constants.php
@@ -201,9 +201,39 @@ assets/js/jquery.form.min.js
 env.php
 favicon.ico
 index.php
+sh/newadmin.sh
 ```
 
 I did this all at once, along with other steps, so the commit was huge:
 https://github.com/jblossomweb/assistrx/commit/7149d2f475d5b60f1ace924fa35537962e47cdfb
 
 
+###8. Build DB support for admin log in/out, with command-line user generation
+
+In order for my admin panel to work, I had to add the corresponding DB table, and get the script to work.
+
+* I ran the following SQL against the `arx_test` schema, and saved the SQL in a file `db2.sql`:
+
+```sql
+CREATE TABLE `admin_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(1024) NOT NULL,
+  `password` varchar(1024) NOT NULL,
+  `pwkey` varchar(255) NOT NULL,
+  `email` varchar(1024) NOT NULL,
+  `fname` varchar(45) NOT NULL,
+  `lname` varchar(45) NOT NULL,
+  `thumbnail` varchar(255) DEFAULT NULL,
+  `deleted` tinyint(4) DEFAULT NULL,
+  `created` datetime DEFAULT NULL,
+  `updated` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=latin1;
+
+```
+
+* Next, I needed to make some changes to the controllers and specifically `application/models/admin/admin_login_model.php` 
+* I generated a new 'pepper' string to go with the salt/hash, and put it into `application/config/constants.php`
+* Once this was setup, admin users can be created using the command-line script: `sh/newadmin.sh`
+* I ran the script, to create a user for myself: `bash sh/newadmin.sh`
+* Now I have a user named `jblossom` on my local db, with a secure, one-way hashed password (sha256 instead of md5, this requires apache mcrypt, installed via pecl I believe )
