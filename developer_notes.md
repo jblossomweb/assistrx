@@ -331,7 +331,7 @@ class admin_patient_model extends CI_Model {
 vim application/views/admin/pages/patients/list.php
 ```
 
-```php
+```html
 <!--Start Breadcrumb -->
 <div id="breadcrumbs-container"></div>
 <!--End Breadcrumb-->
