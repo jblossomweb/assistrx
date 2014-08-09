@@ -118,7 +118,7 @@ class admin_song_model extends CI_Model {
 			$ar = $this->db->get();
 			$this->load->library('artools');
 			$song = $this->artools->first_row($ar);
-			$song = $this->_extract($song);
+			$song = $this->extract($song);
 			return $song;
 		}
 		return false;
@@ -138,7 +138,7 @@ class admin_song_model extends CI_Model {
 			$ar = $this->db->get();
 			$this->load->library('artools');
 			$song = $this->artools->first_row($ar);
-			$song = $this->_extract($song);
+			$song = $this->extract($song);
 			return $song;
 		}
 		return false;
@@ -156,7 +156,7 @@ class admin_song_model extends CI_Model {
 		return $songs;
 	}
 
-	private function _extract($song){
+	public function extract($song){
 		if(is_array($song)){
 			if(isset($song['data']) && !empty($song['data'])){
 				$data = json_decode($song['data']);

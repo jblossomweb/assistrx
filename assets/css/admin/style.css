@@ -68,3 +68,38 @@ li.song:hover{
 span.stream-url{
 	display:none;
 }
+
+
+.songs-report th.width65,
+.songs-report td.width65{
+	width:65px !important;
+}
+
+.songs-report th.width150,
+.songs-report td.width150{
+	width:150px !important;
+}
+.songs-report th.width300,
+.songs-report td.width300{
+	width:300px !important;
+}
+
+.songs-report th.cover,
+.songs-report td.cover{
+	width:43px !important;
+}
+
+.songs-report td.cover img{
+	margin-right: 0px !important;
+}
+
+.songs-report span.cell{
+	width:100%;
+	/*white-space: nowrap;*/
+  	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.songs-report .jp-flat-audio{
+	min-width:100px;
+}

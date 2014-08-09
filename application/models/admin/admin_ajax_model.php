@@ -99,13 +99,14 @@ class admin_ajax_model extends CI_Model {
 	}
 	public function reports($sub='list'){
 		$this->load->model('admin/entity/admin_patient_model','patient');
-		$this->load->model('admin/entity/admin_song_model','song');
 		switch($sub){
 			case 'genres':
 				$data = array();
 			break;
 			case 'songs':
-				$data = array();
+				$data = array(
+					'songs'	=>	$this->patient->list_songs(),
+				);
 			break;
 			case 'list':
 			default:

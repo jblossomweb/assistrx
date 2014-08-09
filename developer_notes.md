@@ -1672,7 +1672,388 @@ vim application/views/admin/devoops.php
 </li>
 ```
 
-* These links will be broken for now, until I build them out...
+* A report dashboard page:
+
+```sh
+vim application/views/admin/reports/list.php
+```
+```html
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<?php $this->load->view('admin/templates/blocks/guts-loader');?>
+<div id="guts" class="row dashboard-header" style="display:none;">
+	<div class="col-xs-12 col-sm-12 dashboard-row">
+		<h3>Reports</h3>
+	</div>
+	<div class="col-xs-12 col-sm-12 dashboard-row">
+		<?php foreach($reports as $report): ?>
+		<div class="btn btn-primary btn-app" 
+			onClick="LoadAjaxContent('/admin/ajax/reports/<?php echo $report['name'];?>');">
+			<i class="fa <?php echo $report['icon'];?>"></i>
+			<span class="font-myriad"><?php echo $report['title'];?></span>
+		</div>
+		<?php endforeach;?>
+	</div>
+</div>
+<div style="height: 40px;"></div>
+<script type="text/javascript">
+$(document).ready(function() {
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "reports", title: "Reports"}
+		 ]);
+		$.getScript('/assets/js/admin/guts-list.js', function(){
+			// Load Datatables and run plugin on tables 
+			LoadDataTablesScripts(AllTables);
+			// Add Drag-n-Drop feature
+			WinMove();
+		});
+	});		
+});
+</script>
+```
+
+* Some code-behind in the ajax model to setup reports:
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+
+```php
+public function reports($sub='list'){
+	switch($sub){
+		case 'genres':
+			$data = array();
+		break;
+		case 'songs':
+			$data = array();
+		break;
+		case 'list':
+		default:
+			$data = array(
+				'reports'	=> array(
+					array(
+						'name'	=>	'songs',
+						'title'	=>	'Songs',
+						'icon'	=>	'fa-music',
+					),
+					array(
+						'name'	=>	'genres',
+						'title'	=>	'Genres',
+						'icon'	=>	'fa-headphones',
+					),
+				),
+			);
+	}
+	return $data;
+}
+```
 
 ###17. Chosen Songs Report
+
+* First, I built out the sub-control in the admin ajax model, to outline what data is needed:
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+
+I'll put the logic in the patient entity model:
+
+```php
+$this->load->model('admin/entity/admin_patient_model','patient');
+```
+
+And add the case:
+
+```php
+case 'songs':
+	$data = array(
+		'songs'	=>	$this->patient->list_songs(),
+	);
+break;
+```
+
+* Next, I add a `list_songs()` method to the admin patient entity model:
+
+```sh
+vim application/models/admin/entity/admin_patient_model.php
+```
+
+```php
+public function list_songs($id=false){
+	$this->load->model('admin/entity/admin_song_model','song');
+	$this->db->select('
+		p.patient_id as pid, 
+		p.patient_name as patient_name,
+		p.favorite_song_id as song_id,
+		s.song_name as song_name,
+		s.song_artist as song_artist,
+		s.song_data as song_data
+	');
+	$this->db->from('patients p');
+	$this->db->join('songs s', 'p.favorite_song_id = s.song_id');
+	$this->db->where('p.favorite_song_id IS NOT NULL');
+	if($id){
+		$this->db->where('p.patient_id', $id);
+		$ar = $this->db->get();
+		$this->load->library('artools');
+		$return = $this->artools->first_row($ar);
+		
+		//extract song_data
+		$song['data'] = $return['song_data'];
+		$song = $this->song->extract($song);
+		$return['song_data'] = $song;
+
+	} else {
+		$ar = $this->db->get();
+		$return = $ar->result_array();
+		foreach($return as $i=>$r){
+			//extract song_data
+			$song['data'] = $r['song_data'];
+			$song = $this->song->extract($song);
+			$return[$i]['song_data'] = $song;
+		}
+	}
+	return $return;
+}
+```
+
+* I went ahead and made my song model's private `_extract()` method public as `extract()`, to expose it. No harm in this. As long as I change where it is called in `select()` and `select_by_patient()`:
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+
+```php
+$song = $this->extract($song);
+```
+```php
+public function extract($song){
+```
+
+* Now we need a view for this page, similar to the patient list, but with some added script to initialize jPlayer for each record as each page of the list is initialized (took some effort):
+
+```sh
+vim application/views/admin/pages/reports/songs.php
+```
+
+```html
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<?php $this->load->view('admin/templates/blocks/guts-loader');?>
+<div class="row" id="guts" style="display:none;">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-name">
+					<i class="fa fa-music"></i>
+					<span>Patient Songs</span>
+				</div>
+				<div class="box-icons">
+					<a class="collapse-link">
+						<i class="fa fa-chevron-up"></i>
+					</a>
+					<a class="expand-link">
+						<i class="fa fa-expand"></i>
+					</a>
+					<a class="close-link">
+						<i class="fa fa-times"></i>
+					</a>
+				</div>
+				<div class="no-move"></div>
+			</div>
+
+			<div class="box-content no-padding table-responsive">
+				<table class="table songs-report table-bordered table-striped table-hover table-heading table-datatable" id="datatable-2">
+					<thead>
+						<tr>
+							<th class="width150 patient"><label><input type="text" name="search_patient_name" value="patient name" class="search_init" /></label></th>
+							<th class="width300 song"><label><input type="text" name="search_song_name" value="song" class="search_init" /></label></th>
+							<th class="width150 artist"><label><input type="text" name="search_song_artist" value="artist" class="search_init" /></label></th>
+							<th class="width150 album"><label><input type="text" name="search_album" value="album" class="search_init" /></label></th>
+							<th class="cover">cover</th>
+							<th class="preview">preview</th>
+							<th class="buy width65"><label><input type="text" name="search_price" value="price" class="search_init" /></label></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach($songs as $song): ?>
+						<tr id="patient_song_<?php echo $song['pid']; ?>" class="patient_song">
+							<td>
+								<span class="cell">
+									<i class="fa fa-user"></i>&nbsp;
+									<?php echo $song['patient_name']; ?>
+								</span>
+							</td>
+							<td>
+								<span class="cell">
+									<i class="fa fa-music"></i>&nbsp;
+									<?php echo $song['song_name']; ?>
+								</span>
+							</td>
+							<td>
+								<span class="cell">
+									<i class="fa fa-microphone"></i>&nbsp;
+									<?php echo $song['song_artist']; ?>
+								</span>
+							</td>
+							<td>
+								<span class="cell">
+									<i class="fa fa-book"></i>&nbsp;
+									<?php echo $song['song_data']['collectionName']; ?>
+								</span>
+							</td>
+							<td class="cover">
+								<img src="<?php echo $song['song_data']['artworkUrl30']?>" alt="<?php echo $song['song_data']['collectionName']; ?>" />
+							</td>
+							<td>
+								<span class="stream-url"><?php echo $song['song_data']['previewUrl']; ?></span>
+
+								<div class="jquery_jplayer" id="jquery_jplayer_<?php echo "audio_".$song['pid']; ?>" class="jp-jplayer"></div>
+
+								<div class="jp_container jp-flat-audio" id="jp_container_<?php echo "audio_".$song['pid']; ?>">
+									<div class="jp-play-control jp-control">
+										<a class="jp-play jp-button"></a>
+										<a class="jp-pause jp-button"></a>
+									</div>
+									<div class="jp-bar">
+										<div class="jp-seek-bar">
+											<div class="jp-play-bar"></div>
+											<div class="jp-details"><span class="jp-title"></span></div>
+											<div class="jp-timing"><span class="jp-duration"></span></div>
+										</div>
+									</div>
+									<div class="jp-no-solution">
+										Media Player Error<br />
+										Update your browser or Flash plugin
+									</div>
+								</div>
+							</td>
+							<td>
+								<a alt="buy" title="buy" target="_blank" href="<?php echo $song['song_data']['trackViewUrl']; ?>">
+									<i class="fa fa-dollar"><?php echo $song['song_data']['trackPrice']?></i>
+								</a>
+							</td>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+					<tfoot>
+					</tfoot>
+				</table>
+			</div>
+
+		</div>
+	</div>
+</div>
+<div style="height: 40px;"></div>
+<script type="text/javascript">
+$(document).ready(function() {
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "reports", title: "Reports"},
+		    {page: "reports/songs", title: "Chosen Songs"}
+		 ]);
+		$.getScript('/assets/js/admin/guts-list.js', function(){
+			// Load Datatables and run plugin on tables 
+			LoadDataTablesScripts(AllTables);
+			// Add Drag-n-Drop feature
+			WinMove();
+		});
+		$('#datatable-2').on('draw', function(){
+			$.getScript('/assets/js/jquery.jplayer.js', function(){
+				var debug = true;
+				$(".jquery_jplayer").each(function(i,el){
+					if(i>0){
+						debug=false;
+					}
+			    	var player = $(this);
+					var cont = player.next(".jp_container");
+
+					player.jPlayer({
+						ready: function(event) {
+							player.jPlayer("setMedia", {
+								title: "Preview",
+								m4a: player.prev("span.stream-url").html()
+							});
+						},
+						play: function() { // Avoid multiple jPlayers playing together.
+							player.jPlayer("pauseOthers");
+						},
+						cssSelectorAncestor: "#"+cont.attr('id'),
+						timeFormat: {
+							padMin: false
+						},
+						swfPath: "js",
+						supplied: "m4a",
+						smoothPlayBar: true,
+						remainingDuration: true,
+						keyEnabled: true,
+						keyBindings: {
+							// Disable some of the default key controls
+							muted: null,
+							volumeUp: null,
+							volumeDown: null
+						},
+						wmode: "window"/*,
+						consoleAlerts: true,
+						errorAlerts: true,
+						warningAlerts: debug*/
+					});
+				});
+			});
+		    
+		});
+		
+	});		
+});
+</script>
+```
+
+* Finally, some css for this report:
+
+```sh
+vim assets/css/admin/style.css
+```
+
+```css
+.songs-report th.width65,
+.songs-report td.width65{
+	width:65px !important;
+}
+
+.songs-report th.width150,
+.songs-report td.width150{
+	width:150px !important;
+}
+.songs-report th.width300,
+.songs-report td.width300{
+	width:300px !important;
+}
+
+.songs-report th.cover,
+.songs-report td.cover{
+	width:43px !important;
+}
+
+.songs-report td.cover img{
+	margin-right: 0px !important;
+}
+
+.songs-report span.cell{
+	width:100%;
+	/*white-space: nowrap;*/
+  	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.songs-report .jp-flat-audio{
+	min-width:100px;
+}
+```
+
+* And now we have a report of chosen songs, searchable, sortable, with cover art, preview audio, and a link to buy from iTunes.
 

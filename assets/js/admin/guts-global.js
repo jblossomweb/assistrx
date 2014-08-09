@@ -9,7 +9,7 @@ function loadCrumbs(crumbs){
 }
 function loadGuts(){
 	$("#guts-loader").hide();
-	$("#guts").slideDown("fast");
+	$("#guts").slideDown("fast").trigger("loaded");
 }
 function renderTemplate(src,target,data){
 	var source   = $(src).html();

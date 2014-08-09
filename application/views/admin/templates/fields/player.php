@@ -1,12 +1,13 @@
+<?php if (!isset($player_id)) $player_id = "audio_1"; ?>
 <div class="form-group <?php echo $name; ?>">
 	<label class="col-sm-3 control-label"><?php echo $label; ?></label>
 	<div class="col-sm-5">
 
 		<span class="stream-url"><?php echo $value; ?></span>
 
-		<div id="jquery_jplayer_audio_1" class="jp-jplayer"></div>
+		<div id="jquery_jplayer_<?php echo $player_id; ?>" class="jp-jplayer"></div>
 
-		<div id="jp_container_audio_1" class="jp-flat-audio">
+		<div id="jp_container_<?php echo $player_id; ?>" class="jp-flat-audio">
 			<div class="jp-play-control jp-control">
 				<a class="jp-play jp-button"></a>
 				<a class="jp-pause jp-button"></a>
