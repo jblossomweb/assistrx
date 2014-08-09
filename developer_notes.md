@@ -960,3 +960,12 @@ And now we have full CRUD for patients. (minus the 'D' since there is no documen
 
 The next thing to build was the song page, to match the functionality of legacy songs.php
 
+* First, I added the 'song' button next to the 'edit' button on the patient list page.
+* Next, since this is part of patients, I added the 'song' condition to the patient method in the admin ajax model.
+* We will be drawing data from the songs table, so I wrote the admin song model.
+* Next, the patient song form (which resides within patient entity dir as `song-form.php`)
+* Now for some new field templates for this special form:
+* Next, the assign song page view (to match legacy songs.php)
+* Finally, the javascript, which was mostly ported from legacy.
+
+Cool. Now we can assign a song to a patient the same way, with some added features, and a cleaner look.
