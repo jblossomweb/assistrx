@@ -1529,3 +1529,35 @@ $.post('/admin/ajax/patients/song', {
 ```
 
 Now we are completely done with the legacy code, and the new method will prevent duplicates.
+
+
+###14. Navigate between forms
+
+I found it cumbersome to navigate between the forms, so I placed a button on the edit page linking to the assign song page for the same patient.
+
+* Not much to this, just a link. But I wanted it to go between the existing buttons, so I just made a new block template:
+
+```sh
+vim application/views/admin/templates/blocks/select-song.php
+```
+
+```html
+<div class="form-group">
+	<div class="col-sm-9 col-sm-offset-3">
+		<button class="btn btn-danger cancel"><i class="fa fa-undo"></i> Back to List</button>
+		<button class="btn btn-primary song"><i class="fa fa-music"></i> Select Song</button>
+		<button type="submit" class="btn btn-success submit"><i class="fa fa-save"></i> Save Info</button>
+		<i class="fa fa-spinner fa-spin" style="display:none;"></i>
+	</div>
+</div>
+```
+
+* Then I changed the last line of the form:
+
+```sh
+vim application/views/admin/pages/patient/form.php
+```
+```php
+<?php $this->load->view('admin/templates/blocks/select-song');?>
+```
+
