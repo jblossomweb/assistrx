@@ -615,17 +615,11 @@ var validatePatient = function(){
 	var btn = $(form_selector+' button.submit');
 	var cancel = $(form_selector+' button.cancel');
 	var spinner = $(form_selector+' .fa-spin');
-	var song = $(form_selector+' button.song');
 	var pid = $(form_selector+' :input[name=id]').val();
 
 	cancel.click(function(e){
 		e.preventDefault();
 		LoadAjaxContent('/admin/ajax/patients');
-	});
-
-	song.click(function(e){
-		e.preventDefault();
-		LoadAjaxContent('/admin/ajax/patients/song?id='+pid);
 	});
 
 	form.bootstrapValidator({
@@ -1561,3 +1555,17 @@ vim application/views/admin/pages/patient/form.php
 <?php $this->load->view('admin/templates/blocks/select-song');?>
 ```
 
+* and added the js to the patient form validator:
+
+```sh
+vim application/views/admin/pages/patient/validate.php
+```
+```js
+var song = $(form_selector+' button.song');
+```
+```js
+song.click(function(e){
+	e.preventDefault();
+	LoadAjaxContent('/admin/ajax/patients/song?id='+pid);
+});
+```
