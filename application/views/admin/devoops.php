@@ -162,17 +162,6 @@
 					</ul>
 				</li>
 
-				
-
-				<!--
-				<li>
-					<a class="ajax-link" href="/admin/ajax/sales-leads/list">
-						<i class="fa fa-dollar"></i>
-						<span class="hidden-xs">Sales Leads</span>
-					</a>
-				</li>
-				-->
-
 			</ul>
 		</div>
 		<!--Start Content-->

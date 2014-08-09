@@ -14,21 +14,11 @@
 	margin-top:14px;
 }
 
-.client-form .select2-arrow,
-.complex-form .select2-arrow,
-.auditorium-form .select2-arrow,
-.user-form .select2-arrow,
-.group-form .select2-arrow,
-.package-form .select2-arrow {
+form .select2-arrow {
 	width:25px !important;
 }
 
-.client-form .select2-arrow b,
-.complex-form .select2-arrow b,
-.auditorium-form .select2-arrow b,
-.user-form .select2-arrow b,
-.group-form .select2-arrow b,
-.package-form .select2-arrow b{
+form .select2-arrow b{
 	background:transparent !important;
 }
 div.lead.card p i{
@@ -52,12 +42,12 @@ div.lead.card p span{
 	color:#63cc9e !important;
 }
 
-#dashboard-header .btn-app span{
+.dashboard-header .btn-app span{
 	color: #428bca !important;
 }
 
-#dashboard-header .dashboard-row,
-#dashboard-header .btn-app{
+.dashboard-header .dashboard-row,
+.dashboard-header .btn-app{
 	margin-bottom:28px !important;
 }
 

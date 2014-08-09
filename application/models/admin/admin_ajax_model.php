@@ -97,5 +97,34 @@ class admin_ajax_model extends CI_Model {
 		}
 		return $data;
 	}
+	public function reports($sub='list'){
+		$this->load->model('admin/entity/admin_patient_model','patient');
+		$this->load->model('admin/entity/admin_song_model','song');
+		switch($sub){
+			case 'genres':
+				$data = array();
+			break;
+			case 'songs':
+				$data = array();
+			break;
+			case 'list':
+			default:
+				$data = array(
+					'reports'	=> array(
+						array(
+							'name'	=>	'songs',
+							'title'	=>	'Songs',
+							'icon'	=>	'fa-music',
+						),
+						array(
+							'name'	=>	'genres',
+							'title'	=>	'Genres',
+							'icon'	=>	'fa-headphones',
+						),
+					),
+				);
+		}
+		return $data;
+	}
 	
 }

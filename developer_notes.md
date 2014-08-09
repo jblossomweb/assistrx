@@ -1621,3 +1621,58 @@ $this->cleanup();
 ```
 
 ###16. Create menu items for Reports
+
+For the remaining requirements, I decided to do 2 reports.
+
+* First, I added a new button to the main dashboard for reports.
+
+```sh
+vim application/views/admin/dashboard.php
+```
+```html
+<div class="col-xs-12 col-sm-12 dashboard-row">
+	<div class="btn btn-primary btn-app" 
+	onClick="LoadAjaxContent('/admin/ajax/patients');">
+		<i class="fa fa-users"></i>
+		<span class="font-myriad">Patients</span>
+	</div>
+	<div class="btn btn-primary btn-app" 
+	onClick="LoadAjaxContent('/admin/ajax/reports');">
+		<i class="fa fa-file-text-o"></i>
+		<span class="font-myriad">Reports</span>
+	</div>
+</div>
+```
+
+* Then I added a nested menu item to the admin outer devoops template, right after the Patients heading:
+
+```sh
+vim application/views/admin/devoops.php
+```
+```html
+<li class="dropdown">
+	<a class="dropdown-toggle" style="cursor:pointer;">
+		<i class="fa fa-file-text-o"></i>
+		<span class="hidden-xs">Reports</span>
+	</a>
+	<ul class="dropdown-menu">
+		<li>
+            <a class="ajax-link" href="/admin/ajax/reports/songs">
+                <i class="fa fa-music"></i>
+                <span class="hidden-xs">Chosen Songs</span>
+            </a>
+        </li>
+		<li>
+            <a class="ajax-link" href="/admin/ajax/reports/genres">
+                <i class="fa fa-headphones"></i>
+                <span class="hidden-xs">Age Genres</span>
+            </a>
+        </li>
+	</ul>
+</li>
+```
+
+* These links will be broken for now, until I build them out...
+
+###17. Chosen Songs Report
+
