@@ -1600,9 +1600,9 @@ vim application/models/admin/entity/admin_song_model.php
 ```php
 public function cleanup(){
 	$this->db->distinct();
-    	$this->db->select('favorite_song_id');
-    	$this->db->from('patients');
-    	$this->db->where('favorite_song_id IS NOT NULL');
+	$this->db->select('favorite_song_id');
+	$this->db->from('patients');
+	$this->db->where('favorite_song_id IS NOT NULL');
 	$ar = $this->db->get();
 	$result = $ar->result_array();
 	$sub = array();
@@ -1619,3 +1619,5 @@ public function cleanup(){
 ```php
 $this->cleanup();
 ```
+
+###16. Create menu items for Reports
