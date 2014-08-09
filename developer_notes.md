@@ -993,18 +993,7 @@ case 'song':
 	$song = $this->input->post('data',TRUE);
 	//error_log(var_export($song,1));
 	if($song){
-		if(isset($song['patient_id']) && isset($song['song_data'])){
-			$return = $this->song->associate(
-				$song['patient_id'], 
-				$song['song_data']
-			);
-		} else {
-			$return = false; //todo: error msg
-		}
-		$data = array(
-			'return'	=>	json_encode($return),
-			'form'		=>	false,
-		);
+		//write this later
 	} else {
 		$id = $this->input->get('id',TRUE);
 		if(intval($id)){
@@ -1035,61 +1024,6 @@ class admin_song_model extends CI_Model {
 		parent::__construct();
 		$this->load->database();
 	}
-
-	/**
-     * TODO: comment this function (save_song_for_patient)
-     *
-     * @author hopeful candadite
-     * @since  date
-     * @param  [type] $patient_id [description]
-     * @param  [type] $song_data [description]
-     * @return [type] [description]
-     */
-    public function associate($patient_id, $song_data){
-    	// if patient didn't exist, return some type of error
-    	if(!$this->patient_exists($patient_id)){
-    		return false;
-    	}
-    	$song_id = $this->exists($song_data);
-    	if(!$song_id){
-    		$song_id = $this->insert(array(
-	        	'song_name'   => $song_data['trackName'],
-	            'song_artist' => $song_data['artistName'],
-	            'song_data'   => json_encode($song_data)
-	        ));
-    	}
-        $this->db->where('patient_id', $patient_id);
-        $updated = $this->db->update('patients', array(
-				'favorite_song_id'	=>	$song_id
-		));
-		return $updated;
-    }
-
-    public function exists($song_data){
-    	if(is_array($song_data)){
-    		$song_data = json_encode($song_data);
-    	}
-    	$hash = md5($song_data);
-    	$this->db->where('song_hash',$hash);
-		$ar = $this->db->get('songs');
-		if($ar->num_rows > 0){
-			$this->load->library('artools');
-			$song = $this->artools->first_row($ar);
-			return $song['song_id'];
-		} else {
-			return false;
-		}
-    }
-
-    public function patient_exists($patient_id){
-    	$this->db->where('patient_id',$patient_id);
-		$ar = $this->db->get('patients');
-		if($ar->num_rows > 0){
-			return true;
-		} else {
-			return false;
-		}
-    }
 	
 	public function insert($song){
 		$song = $this->_validate($song);
@@ -1443,8 +1377,7 @@ var save_song_function_maker = function(song) {
 // selects a song and it needs to save in the DB
 var save_song = function(song) {
 	var patient = form_data['patient'];
-    //$.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
-    $.post('/admin/ajax/patients/song', {
+    $.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
         data : {
             patient_id : patient.id,
             song_data : song
@@ -1490,4 +1423,109 @@ $(":input.search-itunes").keyup(function (e) {
 });
 ```
 
-Cool. Now we can assign a song to a patient the same way, with some added features, and a cleaner look.
+Cool. Now we can assign a song to a patient the same way we did before, with some added features, and a cleaner look.
+
+
+###13. Todo: Song Data Cannot Be duplicated in the Database
+
+Now that we have the application functionally ported to CodeIgniter/Devoops/JBAdmin, we are ready to tackle some of the remaining tasks.
+
+In order to prevent duplicate songs inserting into the database, I could just constrain the hash field as unique in the DB table, and gracefully handle query errors, but I am going to assume a non-DBA role for this project, and I'd rather enforce this constraint in code for portability.
+
+The final thing left to port from legacy is the ajax method save_song_for_patient. So before I start adding logic, I should port this into the framework, and wash my hands of the old code.
+
+* First, I need to add methods to the admin_song_model:
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+```php
+/**
+     * TODO: comment this function (save_song_for_patient)
+     *
+     * @author hopeful candadite
+     * @since  date
+     * @param  [type] $patient_id [description]
+     * @param  [type] $song_data [description]
+     * @return [type] [description]
+     */
+    public function associate($patient_id, $song_data){
+    	// if patient didn't exist, return some type of error
+    	if(!$this->patient_exists($patient_id)){
+    		return false;
+    	}
+    	$song_id = $this->exists($song_data);
+    	if(!$song_id){
+    		$song_id = $this->insert(array(
+	        	'song_name'   => $song_data['trackName'],
+	            'song_artist' => $song_data['artistName'],
+	            'song_data'   => json_encode($song_data)
+	        ));
+    	}
+        $this->db->where('patient_id', $patient_id);
+        $updated = $this->db->update('patients', array(
+				'favorite_song_id'	=>	$song_id
+		));
+		return $updated;
+    }
+
+    public function exists($song_data){
+    	if(is_array($song_data)){
+    		$song_data = json_encode($song_data);
+    	}
+    	$hash = md5($song_data);
+    	$this->db->where('song_hash',$hash);
+		$ar = $this->db->get('songs');
+		if($ar->num_rows > 0){
+			$this->load->library('artools');
+			$song = $this->artools->first_row($ar);
+			return $song['song_id'];
+		} else {
+			return false;
+		}
+    }
+
+    public function patient_exists($patient_id){
+    	$this->db->where('patient_id',$patient_id);
+		$ar = $this->db->get('patients');
+		if($ar->num_rows > 0){
+			return true;
+		} else {
+			return false;
+		}
+    }
+```
+
+* Next, write out the conditional within patients/song in the admin ajax model:
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+```php
+if($song){
+	if(isset($song['patient_id']) && isset($song['song_data'])){
+		$return = $this->song->associate(
+			$song['patient_id'], 
+			$song['song_data']
+		);
+	} else {
+		$return = false; //todo: error msg
+	}
+	$data = array(
+		'return'	=>	json_encode($return),
+		'form'		=>	false,
+	);
+} 
+```
+
+* Finally, swap out the ajax call in the script:
+
+```sh
+vim assets/js/admin/itunes-search.js
+```
+```js
+//$.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
+$.post('/admin/ajax/patients/song', {
+```
+
+Now we are completely done with the legacy code, and the new method will prevent duplicates.
