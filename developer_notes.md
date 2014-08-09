@@ -1569,3 +1569,53 @@ song.click(function(e){
 	LoadAjaxContent('/admin/ajax/patients/song?id='+pid);
 });
 ```
+
+###15. Todo: If a user changes songs, make sure to delete the old song record if nobody else is sharing it
+
+This involved creating a `cleanup` method, and attaching it to the existing `associate` method within the admin song model.
+
+* I had to stop and think about this for a minute, and concluded the best approach would be a sub-query, eg:
+
+```sql
+DELETE 
+FROM 
+    	songs 
+WHERE 
+	song_id NOT IN (
+		SELECT 
+			DISTINCT favorite_song_id 
+		FROM 
+			patients 
+		WHERE 
+			favorite_song_id IS NOT NULL
+    )
+
+```
+
+* Since CodeIgniter's ActiveRecord (a wannabe ORM) does not natively support sub-queries, I had to write some logic, and evaluate the subquery as an array. Here is the cleanup method:
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+```php
+public function cleanup(){
+	$this->db->distinct();
+    	$this->db->select('favorite_song_id');
+    	$this->db->from('patients');
+    	$this->db->where('favorite_song_id IS NOT NULL');
+	$ar = $this->db->get();
+	$result = $ar->result_array();
+	$sub = array();
+	foreach($result as $r){
+		$sub[] = $r['favorite_song_id'];
+	}
+	$this->db->where_not_in('song_id', $sub);
+	$this->db->delete('songs');
+    }
+```
+
+* and then I called it from the `associate()` method, right before the return:
+
+```php
+$this->cleanup();
+```
