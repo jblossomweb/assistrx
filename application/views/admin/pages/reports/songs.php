@@ -2,13 +2,15 @@
 <div id="breadcrumbs-container"></div>
 <!--End Breadcrumb-->
 <?php $this->load->view('admin/templates/blocks/guts-loader');?>
+
 <div class="row" id="guts" style="display:none;">
 	<div class="col-xs-12">
 		<div class="box">
 			<div class="box-header">
 				<div class="box-name">
-					<i class="fa fa-music"></i>
-					<span>Patient Songs</span>
+					<!--<i class="fa fa-music"></i>-->
+					<img style="width:20px" width="20" src="http://www.cornify.com/getacorn.php?r=<?php echo time()+1;?>" />
+					<span>Chosen Songs</span>
 				</div>
 				<div class="box-icons">
 					<a class="collapse-link">
@@ -99,6 +101,13 @@
 						<?php endforeach; ?>
 					</tbody>
 					<tfoot>
+						<tr>
+							<td colspan="7">
+								<a class="btn btn-primary btn-large" style="cursor:pointer;" onclick="cornify_add();return false;"><i class="fa fa-star-half-o"></i> More Rainbows and Unicorns!</a>
+								&nbsp;&nbsp;
+								<img style="width:33px" width="33" src="http://www.cornify.com/getacorn.php?r=<?php echo time();?>" />
+							</td>
+						</tr>
 					</tfoot>
 				</table>
 			</div>
@@ -107,6 +116,8 @@
 	</div>
 </div>
 <div style="height: 40px;"></div>
+
+<script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
 	$.getScript('/assets/js/admin/guts-global.js', function(){
