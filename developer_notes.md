@@ -65,7 +65,19 @@ Next I had to connect the database.
 * ran the dump file supplied with project.
 * navigated to project webroot: `cd  /var/www/html/assistrx`
 * copied sample file: `cp config/database.sample.php config/database.php`
-* changed settings to reflect host, schema, user, and password.
+* changed settings to reflect host, schema, user, and password:
+
+```sh
+vim config/database.php
+```
+```ini
+[DB]
+host = localhost
+user = arxtest
+pass = XXXXXXXXXXXX
+database = arx_test
+```
+
 * created a `.gitignore` file in the project webroot, containing `config/database.php`
 * test by hitting `patients.php` in a web browser.
 
@@ -961,11 +973,521 @@ And now we have full CRUD for patients. (minus the 'D' since there is no documen
 The next thing to build was the song page, to match the functionality of legacy songs.php
 
 * First, I added the 'song' button next to the 'edit' button on the patient list page.
+
+```sh
+vim application/views/admin/pages/patients/list.php
+```
+```html
+<a alt="song" title="song" style="cursor:pointer;" onclick="LoadAjaxContent('/admin/ajax/patients/song?id=<?php echo $patient['id']; ?>');"><i class="fa fa-music"></i></a>
+```
+
 * Next, since this is part of patients, I added the 'song' condition to the patient method in the admin ajax model.
-* We will be drawing data from the songs table, so I wrote the admin song model.
-* Next, the patient song form (which resides within patient entity dir as `song-form.php`)
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+```php
+case 'song':
+	$this->load->model('admin/entity/admin_song_model','song');
+	// true indicates XSS filter
+	$song = $this->input->post('data',TRUE);
+	//error_log(var_export($song,1));
+	if($song){
+		if(isset($song['patient_id']) && isset($song['song_data'])){
+			$return = $this->song->associate(
+				$song['patient_id'], 
+				$song['song_data']
+			);
+		} else {
+			$return = false; //todo: error msg
+		}
+		$data = array(
+			'return'	=>	json_encode($return),
+			'form'		=>	false,
+		);
+	} else {
+		$id = $this->input->get('id',TRUE);
+		if(intval($id)){
+			$patient = $this->patient->select($id);
+			$song = $this->song->select_by_patient($id);
+			$data = array(
+				'patient'	=>	$patient,
+				'song'		=>	$song,
+				'form'		=>	true,
+			);
+		} else {
+			redirect('admin/ajax/patients');
+		}
+	}
+break;
+```
+* We will be drawing data from the songs table, so I wrote the admin song entity model:
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+```php
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class admin_song_model extends CI_Model {
+	
+	public function __construct(){
+		parent::__construct();
+		$this->load->database();
+	}
+
+	/**
+     * TODO: comment this function (save_song_for_patient)
+     *
+     * @author hopeful candadite
+     * @since  date
+     * @param  [type] $patient_id [description]
+     * @param  [type] $song_data [description]
+     * @return [type] [description]
+     */
+    public function associate($patient_id, $song_data){
+    	// if patient didn't exist, return some type of error
+    	if(!$this->patient_exists($patient_id)){
+    		return false;
+    	}
+    	$song_id = $this->exists($song_data);
+    	if(!$song_id){
+    		$song_id = $this->insert(array(
+	        	'song_name'   => $song_data['trackName'],
+	            'song_artist' => $song_data['artistName'],
+	            'song_data'   => json_encode($song_data)
+	        ));
+    	}
+        $this->db->where('patient_id', $patient_id);
+        $updated = $this->db->update('patients', array(
+				'favorite_song_id'	=>	$song_id
+		));
+		return $updated;
+    }
+
+    public function exists($song_data){
+    	if(is_array($song_data)){
+    		$song_data = json_encode($song_data);
+    	}
+    	$hash = md5($song_data);
+    	$this->db->where('song_hash',$hash);
+		$ar = $this->db->get('songs');
+		if($ar->num_rows > 0){
+			$this->load->library('artools');
+			$song = $this->artools->first_row($ar);
+			return $song['song_id'];
+		} else {
+			return false;
+		}
+    }
+
+    public function patient_exists($patient_id){
+    	$this->db->where('patient_id',$patient_id);
+		$ar = $this->db->get('patients');
+		if($ar->num_rows > 0){
+			return true;
+		} else {
+			return false;
+		}
+    }
+	
+	public function insert($song){
+		$song = $this->_validate($song);
+		if($song){
+			$this->db->insert('songs', array(
+				'song_name'		=>	$song['song_name'],
+				'song_artist'	=>	$song['song_artist'],
+				'song_data'		=>	$song['song_data'],
+			)); 
+			return $this->db->insert_id();
+		}
+		return false;
+	}
+
+	public function select($id){
+		if($id){
+			$this->db->select('
+				s.song_id as id, 
+				s.song_name as name,
+				s.song_artist as artist,
+				s.song_data as data
+			');
+			$this->db->from('songs s');
+			$this->db->where('s.song_id', $id);
+			$ar = $this->db->get();
+			$this->load->library('artools');
+			$song = $this->artools->first_row($ar);
+			$song = $this->_extract($song);
+			return $song;
+		}
+		return false;
+	}
+
+	public function select_by_patient($pid){
+		if($pid){
+			$this->db->select('
+				s.song_id as id, 
+				s.song_name as name,
+				s.song_artist as artist,
+				s.song_data as data
+			');
+			$this->db->from('patients p');
+			$this->db->join('songs s', 'p.favorite_song_id = s.song_id');
+			$this->db->where('p.patient_id', $pid);
+			$ar = $this->db->get();
+			$this->load->library('artools');
+			$song = $this->artools->first_row($ar);
+			$song = $this->_extract($song);
+			return $song;
+		}
+		return false;
+	}
+
+	public function list_all(){
+		$this->db->select('
+			s.song_id as id, 
+			s.song_name as name,
+			s.song_artist as artist
+		');
+		$this->db->from('songs s');
+		$ar = $this->db->get();
+		$songs = $ar->result_array();
+		return $songs;
+	}
+
+	private function _extract($song){
+		if(is_array($song)){
+			if(isset($song['data']) && !empty($song['data'])){
+				$data = json_decode($song['data']);
+				if(is_object($data)){
+					foreach($data as $k=>$val){
+						$song[$k] = $val;
+					}
+				} 
+				unset($song['data']);
+			}
+		}
+		return $song;
+	}
+
+	private function _validate($data){
+		extract($data);
+		if(empty($song_name)){
+			//error_log("bad name");
+			return false;
+		}
+		if(empty($song_artist)){
+			//error_log("bad artist");
+			return false;
+		}
+		if(empty($song_data)){
+			//error_log("bad data");
+			return false;
+		}
+		return $data;
+	}
+
+	
+}
+```
 * Now for some new field templates for this special form:
+
+```sh
+vim application/views/admin/templates/fields/disabled.php
+```
+```html
+<div class="form-group <?php echo $name; ?> has-feedback">
+	<label class="col-sm-3 control-label"><?php echo $label; ?></label>
+	<div class="col-sm-5">
+		<input disabled type="text" class="form-control" name="<?php echo $name; ?>" value="<?php echo $value; ?>" />
+		<span class="fa <?php echo $icon; ?> form-control-feedback"></span>
+	</div>
+</div>
+```
+
+```sh
+vim application/views/admin/templates/fields/image.php
+```
+```html
+<div class="form-group <?php echo $name; ?>">
+	<label class="col-sm-3 control-label"><?php echo $label; ?></label>
+	<div class="col-sm-5">
+		<img src="<?php echo $value; ?>" />
+	</div>
+</div>
+```
+
+
+```sh
+vim application/views/admin/templates/fields/player.php
+```
+
+This one uses jPlayer, a plugin for jQuery that will render the media player.
+
+```html
+<div class="form-group <?php echo $name; ?>">
+	<label class="col-sm-3 control-label"><?php echo $label; ?></label>
+	<div class="col-sm-5">
+
+		<span class="stream-url"><?php echo $value; ?></span>
+
+		<div id="jquery_jplayer_audio_1" class="jp-jplayer"></div>
+
+		<div id="jp_container_audio_1" class="jp-flat-audio">
+			<div class="jp-play-control jp-control">
+				<a class="jp-play jp-button"></a>
+				<a class="jp-pause jp-button"></a>
+			</div>
+			<div class="jp-bar">
+				<div class="jp-seek-bar">
+					<div class="jp-play-bar"></div>
+					<div class="jp-details"><span class="jp-title"></span></div>
+					<div class="jp-timing"><span class="jp-duration"></span></div>
+				</div>
+			</div>
+			<div class="jp-no-solution">
+				Media Player Error<br />
+				Update your browser or Flash plugin
+			</div>
+		</div>
+
+	</div>
+</div>
+```
+
+* Next, the patient song form (which resides within patient entity dir as `song-form.php`):
+
+```sh
+vim application/views/admin/pages/patients/song-form.php
+```
+```html
+{{#if patient.id}}
+<input class="hidden" name="id" value="{{patient.id}}" />
+{{/if}}
+<fieldset class="patient-song-form">
+	{{#if song}}
+	<legend>{{patient.name}} has a Song</legend>
+	<?php $this->load->view('admin/templates/fields/disabled',array(
+		'label'	=>	"Song",
+		'name'	=>	"name",
+		'value'	=>	"{{song.name}}",
+		'icon'	=>	"fa-music",
+	));?>
+	<?php $this->load->view('admin/templates/fields/disabled',array(
+		'label'	=>	"Artist",
+		'name'	=>	"artist",
+		'value'	=>	"{{song.artist}}",
+		'icon'	=>	"fa-music",
+	));?>
+	<?php $this->load->view('admin/templates/fields/image',array(
+		'label'	=>	"Album Cover",
+		'name'	=>	"artworkUrl",
+		'value'	=>	"{{song.artworkUrl}}",
+	));?>
+	<?php $this->load->view('admin/templates/fields/player',array(
+		'label'	=>	"Preview",
+		'name'	=>	"previewUrl",
+		'value'	=>	"{{song.previewUrl}}",
+	));?>
+	<legend>Assign a Different Song to {{patient.name}}</legend>
+	<?php $this->load->view('admin/templates/fields/itunes',array(
+		'label'	=>	"Search for a Song",
+		'name'	=>	"song_search",
+		'icon'	=>	"fa-apple",
+		'phold'	=>	"any song on iTunes",
+	));?>
+	{{else}}
+	<legend>Assign a Song to {{patient.name}}</legend>
+	<?php $this->load->view('admin/templates/fields/itunes',array(
+		'label'	=>	"Search for a Song",
+		'name'	=>	"song_search",
+		'icon'	=>	"fa-apple",
+		'phold'	=>	"any song on iTunes",
+	));?>
+	{{/if}}
+</fieldset>
+```
 * Next, the assign song page view (to match legacy songs.php)
-* Finally, the javascript, which was mostly ported from legacy.
+
+```sh
+vim application/views/admin/pages/patients/song.php
+```
+```html
+<?php if(!$form):?>
+<?php echo $return; ?>
+<?php else: ?>
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<div class="row">
+	<div class="col-xs-12 col-sm-12">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-name">
+					<i class="fa fa-music"></i>
+					<span>Song Selection</span>
+				</div>
+				<div class="box-icons">
+					<a class="collapse-link">
+						<i class="fa fa-chevron-up"></i>
+					</a>
+					<a class="expand-link">
+						<i class="fa fa-expand"></i>
+					</a>
+					<a class="close-link">
+						<i class="fa fa-times"></i>
+					</a>
+				</div>
+				<div class="no-move"></div>
+			</div>
+			<div class="box-content">
+				<form id="frmEditPatientSong" method="post" action="/admin/ajax/patients/song" class="form-horizontal"></form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script id="patient-song-form-template" type="text/x-handlebars-template">
+<?php $this->load->view('admin/pages/patients/song-form');?>
+</script>
+
+<script type="text/javascript">
+var form_selector = "#frmEditPatientSong";
+var form_template = "#patient-song-form-template";
+var itunes_result_template = "#itunes-result-template";
+var form_data = {
+	  <?php if(!empty($patient['name'])): ?>
+	  patient: {
+	  	id: "<?php echo $patient['id'];?>",
+	  	name: "<?php echo $patient['name'];?>",
+	  	age: "<?php echo $patient['age'];?>",
+	  	phone: "<?php echo $patient['phone'];?>"
+	  }<?php endif;?><?php if(!empty($song['name'])): ?>,
+	  song: {
+	  	id: "<?php echo $song['id'];?>",
+	  	name: "<?php echo $song['name'];?>",
+	  	artist: "<?php echo $song['artist'];?>",
+	  	artworkUrl: "<?php echo $song['artworkUrl100'];?>",
+	  	previewUrl: "<?php echo $song['previewUrl'];?>"
+	  }<?php endif;?>
+};
+$(document).ready(function() {
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "patients", title: "Patients"},
+	    	{page: "patients/song?id=<?php echo $patient['id'];?>", title: "Song"}
+		 ]);
+		renderTemplate(form_template,form_selector,form_data);
+		$.getScript('/assets/js/admin/guts-form.js', function(){
+			loadForm(function(){
+				<?php if(!empty($song['name'])): ?>
+				$.getScript('/assets/js/jquery.jplayer.js', function(){
+					$("#jquery_jplayer_audio_1").jPlayer({
+						ready: function(event) {
+							$(this).jPlayer("setMedia", {
+								title: "Preview",
+								m4a: $(".previewUrl").find("span.stream-url").html()
+							});
+						},
+						play: function() { // Avoid multiple jPlayers playing together.
+							$(this).jPlayer("pauseOthers");
+						},
+						timeFormat: {
+							padMin: false
+						},
+						swfPath: "js",
+						supplied: "m4a",
+						cssSelectorAncestor: "#jp_container_audio_1",
+						smoothPlayBar: true,
+						remainingDuration: true,
+						keyEnabled: true,
+						keyBindings: {
+							// Disable some of the default key controls
+							muted: null,
+							volumeUp: null,
+							volumeDown: null
+						},
+						wmode: "window"
+					});
+				});
+				<?php endif; ?>
+			});
+
+			$.getScript('/assets/js/admin/itunes-search.js', function(){
+				//
+			});
+
+		});
+	});
+});
+</script>
+<?php endif; ?>
+```
+
+* Finally, the javascript, which was mostly ported from legacy:
+
+```sh
+vim assets/js/admin/itunes-search.js
+```
+```js
+// this will return a closure (function) to be executed later, which keeps 
+// track of the song variable for the save_song() function
+var save_song_function_maker = function(song) {
+    return function() {
+        save_song(song);
+    }
+};
+
+// this is the actual function which gets called when the user
+// selects a song and it needs to save in the DB
+var save_song = function(song) {
+	var patient = form_data['patient'];
+    //$.post('/legacy/ajax_controller.php?method=save_song_for_patient', {
+    $.post('/admin/ajax/patients/song', {
+        data : {
+            patient_id : patient.id,
+            song_data : song
+        }
+    }, function(r) {
+        console.log(r);
+        var data = $.parseJSON(r);
+        console.log(data);
+        LoadAjaxContent('/admin/ajax/patients/song?id='+patient.id);
+    });
+};
+
+
+$(":input.search-itunes").keyup(function (e) {
+    var term = $(this).val();
+    // from legacy songs.php
+    $.ajax({
+        url : 'https://itunes.apple.com/search',
+        jsonpCallback : 'jsonCallback',
+        async: true,
+        contentType: "application/json",
+        dataType: 'jsonp',
+        data : {
+            country : 'US',
+            term : term,
+            entity : 'song'
+        },
+        success: function(data) {
+        	$("div.search-itunes-results .list").html('');
+            var songs = data.results;
+            for(var s in songs) {
+                var song = songs[s];
+                //console.log(song);
+                var song_element = $('<li class="song">'+song.artistName+' - '+song.trackName+'</li>');
+                song_element.click(save_song_function_maker(song));
+                $("div.search-itunes-results .list").append(song_element);
+            }
+
+        }
+    });
+
+    
+});
+```
 
 Cool. Now we can assign a song to a patient the same way, with some added features, and a cleaner look.
