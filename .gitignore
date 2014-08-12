@@ -2,3 +2,5 @@ config/database.php
 legacy/config/database.php
 application/config/database.php
 application/config/email.php
+application/config/pepper.php
+application/config/echonest.php

@@ -185,6 +185,9 @@
 <script src="../assets/devoops/plugins/tinymce/jquery.tinymce.min.js"></script>
 <script src="../assets/js/handlebars-v1.3.0.js"></script>
 
+<script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/0.2.0/Chart.min.js"></script>
+
 <?php /* requires handlebars */ ?>
 <?php $this->load->view('admin/templates');?>
 
@@ -193,7 +196,6 @@
 
 <?php /* All functions for this theme + document.ready processing */ ?>
 <script src="../assets/devoops/js/devoops.js"></script>
-<?php /* sample: <script src="../assets/devoops/js/devoops-constants.js"></script> */ ?>
 <script src="../assets/js/admin/devoops-constants.js"></script>
 <script src="../assets/devoops/js/devoops-ready.js"></script>
 </body>

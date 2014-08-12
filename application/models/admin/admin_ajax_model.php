@@ -99,9 +99,37 @@ class admin_ajax_model extends CI_Model {
 	}
 	public function reports($sub='list'){
 		$this->load->model('admin/entity/admin_patient_model','patient');
+		$this->load->model('admin/entity/admin_genre_model','genre');
 		switch($sub){
 			case 'genres':
-				$data = array();
+				$data = array(
+					'groups'	=>	array(
+						array(
+							'name'	=>	'under 18',
+							'data'	=>	$this->genre->chart_by_age(false,17),
+						),
+						array(
+							'name'	=>	'ages 18-24',
+							'data'	=>	$this->genre->chart_by_age(18,24),
+						),
+						array(
+							'name'	=>	'ages 25-44',
+							'data'	=>	$this->genre->chart_by_age(25,44),
+						),
+						array(
+							'name'	=>	'ages 45-64',
+							'data'	=>	$this->genre->chart_by_age(45,64),
+						),
+						array(
+							'name'	=>	'ages 65-94',
+							'data'	=>	$this->genre->chart_by_age(65,94),
+						),
+						array(
+							'name'	=>	'ages 95+',
+							'data'	=>	$this->genre->chart_by_age(95,false),
+						),
+					),
+				);
 			break;
 			case 'songs':
 				$data = array(

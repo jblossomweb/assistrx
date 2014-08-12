@@ -1965,11 +1965,7 @@ $(document).ready(function() {
 		});
 		$('#datatable-2').on('draw', function(){
 			$.getScript('/assets/js/jquery.jplayer.js', function(){
-				var debug = true;
 				$(".jquery_jplayer").each(function(i,el){
-					if(i>0){
-						debug=false;
-					}
 			    	var player = $(this);
 					var cont = player.next(".jp_container");
 
@@ -1998,10 +1994,7 @@ $(document).ready(function() {
 							volumeUp: null,
 							volumeDown: null
 						},
-						wmode: "window"/*,
-						consoleAlerts: true,
-						errorAlerts: true,
-						warningAlerts: debug*/
+						wmode: "window"
 					});
 				});
 			});
@@ -2057,3 +2050,547 @@ vim assets/css/admin/style.css
 
 * And now we have a report of chosen songs, searchable, sortable, with cover art, preview audio, and a link to buy from iTunes.
 
+###18. Add Rainbows and Unicorns
+
+The client has specifically asked that we incorporate a Rainbow or Unicorn into the design of this page.
+
+* I found a web-based image generator: http://www.cornify.com
+
+* I added the script tag to the outer devoops template:
+
+```sh
+vim application/views/admin/devoops.php
+```
+
+```html
+<script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
+```
+
+* Now for a button at the bottom of the list, with a fancy friend next to it:
+
+```sh
+vim application/views/admin/reports/songs.php
+```
+
+```html
+<tfoot>
+	<tr>
+		<td colspan="7">
+			<a class="btn btn-primary btn-large" style="cursor:pointer;" onclick="cornify_add();return false;"><i class="fa fa-star-half-o"></i> More Rainbows and Unicorns!</a>
+			&nbsp;&nbsp;
+			<img style="width:33px" width="33" src="http://www.cornify.com/getacorn.php?r=<?php echo time();?>" />
+		</td>
+	</tr>
+</tfoot>
+```
+* And we better change the page header icon, so we have Rainbow/Unicorn awesomeness at the top of the page, too (have to pass a different timestamp to get a different image):
+
+```html
+<img style="width:20px" width="20" src="http://www.cornify.com/getacorn.php?r=<?php echo time()+1;?>" />
+```
+
+* Now this report is complete with Robust, Scalable, On-Demand Rainbows and Unicorns.
+
+
+###19. Something Interesting Involving Genre and Age
+
+I decided to build a report with pie charts for 6 age groups, displaying which genres are most popular for each age group.
+
+* First, I needed a new field in the `songs` table. I will keep it simple and only have a single genre per song/artist. I ran the SQL below, and saved in a new file `db3.sql`:
+
+```sql
+ALTER TABLE `arx_test`.`songs` 
+ADD COLUMN `song_genre` VARCHAR(55) NULL AFTER `song_artist`;
+```
+
+* I immediately noticed when testing the iTunes feed that not all song tracks returned a `primaryGenreName` attribute, so I could not depend on this to populate the new field.
+
+* I needed a separate web service. After some searching, I came across http://the.echonest.com/
+
+* I signed up for an account, and received an API key, which I saved in a config file (along with a sample), and added to .gitignore
+
+```sh
+vim application/config/echonest.php
+```
+```php
+// echonest api key
+define('ECHONEST_API_KEY', "--api key--");
+define('ECHONEST_CONSUMER_KEY', "--consumer key--");
+define('ECHONEST_SECRET', "--shared secret--");
+```
+
+* Next, I chained it to `config/constants`
+
+```sh
+vim application/config/constants.php
+```
+```php
+include 'application/config/echonest.php';
+```
+
+* Now I need a method to get the genre from echonest, should iTunes not have one listed for the track. (Although it would be ideal, I decided not to make an artist table, mostly to save development time):
+
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+```php
+public function get_artist_genre($artist){
+	$artist = strtolower($artist);
+	$artist = urlencode($artist);
+	$url = "http://developer.echonest.com/api/v4/artist/terms?api_key=".ECHONEST_API_KEY."&format=json&name=".$artist;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+    $result = curl_exec($ch); 
+    curl_close($ch);
+    $json = json_decode($result);
+
+    $response = $json->response;
+    if($response->status->message == "Success"){
+    	$terms = $response->terms; 
+    	if(count($terms)){
+    		$term = $terms[0]; // grab the first one
+    		return $term->name;
+    	}
+    }
+    return 'other';
+}
+```
+
+* Cool. Now this is officially a mash-up. I can get the main genre from an artist name, and I have a place to put it. Now I'm going to attach some action to the song model's `insert()` method:
+
+
+```php
+public function insert($song){
+	$song = $this->_validate($song);
+	if($song){
+		$data = $this->extract($song['song_data']);
+		if(isset($data['primaryGenreName']) && !empty($data['primaryGenreName'])){
+			$song['song_genre'] = $data['primaryGenreName'];
+		} else {
+			$song['song_genre'] = $this->get_artist_genre($song['song_artist']);
+		}
+		$this->db->insert('songs', array(
+			'song_name'		=>	$song['song_name'],
+			'song_artist'	=>	$song['song_artist'],
+			'song_genre'	=>	$song['song_genre'],
+			'song_data'		=>	$song['song_data'],
+		)); 
+		return $this->db->insert_id();
+	}
+	return false;
+}
+```
+
+* Awesome. Now any further song inserts will also scoop up a genre. At this point, for integrity, I just went ahead and cleared the patients' favorite songs and song records from my local db. Then I re-associated a few for testing.
+
+Had this been a real-life production environment, dev effort would have been put into writing a script to loop through existing song records, and tag with a genre, to keep the report accurate.
+
+* After a few tests, I confirmed the data was populating. Now I could build a report, with some cool pie charts. I added <a href="https://github.com/nnnick/Chart.js">Chart.js</a> to the outer Devoops template:
+
+```sh
+vim application/views/admin/devoops.php
+```
+```html
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/0.2.0/Chart.min.js"></script>
+```
+
+* Now I can build my report. First, since I want multiple pie charts on the page, but I want to keep a common color scheme, I decided I needed to add a genre table, and an entity model to go with it. I just used the genre name as the primary key, since it's already in the songs table that way. 
+
+```sh
+vim db3.sql
+```
+```sql
+CREATE TABLE `genres` (
+  `genre_name` VARCHAR(55) NOT NULL,
+  `genre_desc` VARCHAR(255) NULL,
+  `genre_url` VARCHAR(255) NULL,
+  `chart_color` VARCHAR(6) NULL,
+  `chart_highlight` VARCHAR(6) NULL,
+  PRIMARY KEY (`genre_name`));
+```
+
+* For now, I'm just going to associate the name with a color, but the Echonest API has a wealth of information about any genre, so I added a few extra fields, in case I want to build more reports later. Now I need an entity model for the new table, along with the methods I need for the report:
+
+```sh
+class admin_genre_model extends CI_Model {
+
+	public function insert($genre_name=false){
+		if($genre_name && !empty($genre_name)){
+			$this->db->insert('genres', array(
+				'genre_name'	=>	$genre_name,
+				'chart_color'	=>	sprintf('#%06X', mt_rand(0, 0xFFFFFF)),
+			)); 
+			return $this->db->insert_id();
+		}
+		return false;
+	}
+
+	public function select_chart_color($genre_name=false){
+		error_log("select_chart_color($genre_name)");
+		if($genre_name && !empty($genre_name)){
+			$this->db->from('genres');
+			$this->db->where('genre_name',$genre_name);
+			$ar = $this->db->get();
+			$this->load->library('artools');
+			$row = $this->artools->first_row($ar);
+			if(isset($row['chart_color']) && !empty($row['chart_color'])){
+				error_log($row['chart_color']);
+				return $row['chart_color'];
+			}
+		}
+		return false;
+	}
+
+	public function chart_all(){
+		$genres = $this->report_all();
+		return $this->chart_js($genres);
+	}
+
+	public function report_all(){
+		/*
+		SELECT 
+			COUNT(song_id) as songs, 
+			song_genre as genre
+		FROM 
+			songs
+		WHERE
+			song_genre IS NOT NULL
+			AND song_genre != '0'
+		GROUP BY 
+			song_genre ASC
+		*/
+		$this->db->select("
+			COUNT(song_id) as songs, 
+			song_genre as genre
+		");
+		$this->db->from("songs");
+		$this->db->where("song_genre IS NOT NULL");
+		$this->db->where("song_genre !=", "0");
+		$this->db->group_by("song_genre ASC"); 
+		$ar = $this->db->get();
+		$genres = $ar->result_array();
+		return $genres;
+	}
+
+	public function chart_by_age($start_age=false,$end_age=false){
+		$genres = $this->report_by_age($start_age,$end_age);
+		return $this->chart_js($genres);
+	}
+
+	public function report_by_age($start_age=false,$end_age=false){
+		/*
+		SELECT 
+			COUNT(s.song_id) as songs, 
+			s.song_genre as genre
+		FROM 
+			patients p
+		JOIN
+			songs s
+		ON
+			s.song_id = p.favorite_song_id
+		WHERE
+			s.song_genre IS NOT NULL
+			AND s.song_genre != '0'
+			AND p.patient_age >= :start_age
+			AND p.patient_age <= :end_age
+		GROUP BY 
+			s.song_genre ASC
+		*/
+		$this->db->select("
+			COUNT(s.song_id) as songs, 
+			s.song_genre as genre
+		");
+		$this->db->from("patients p");
+		$this->db->join("songs s", "s.song_id = p.favorite_song_id");
+		$this->db->where("s.song_genre IS NOT NULL");
+		$this->db->where("s.song_genre !=", "0");
+		if($start_age){
+			$this->db->where("p.patient_age >=",$start_age);
+		}
+		if($end_age){
+			$this->db->where("p.patient_age <=",$end_age);
+		}
+		$this->db->group_by("s.song_genre ASC"); 
+		$ar = $this->db->get();
+		$genres = $ar->result_array();
+		return $genres;
+	}
+
+	public function chart_js($genres){
+		$return = array();
+		foreach($genres as $i=>$genre){
+			$return[] = (object) array(
+				'value'	=> 	intval($genre['songs']),
+		        'color'	=>	$this->select_chart_color($genre['genre']),
+		        'label'	=> $genre['genre'],
+			);
+		}
+		return $return;
+	}
+
+	public function exists($genre_name){
+    	$this->db->where('genre_name',$genre_name);
+		$ar = $this->db->get('genres');
+		if($ar->num_rows > 0){
+			return true;
+		} else {
+			return false;
+		}
+    }
+
+    public function get_artist_genre($artist){
+    	//ideally I should cache this in an artists table
+		$artist = strtolower($artist);
+		$artist = urlencode($artist);
+		$url = "http://developer.echonest.com/api/v4/artist/terms?api_key=".ECHONEST_API_KEY."&format=json&name=".$artist;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+        $result = curl_exec($ch); 
+        curl_close($ch);
+        $json = json_decode($result);
+
+        $response = $json->response;
+        if($response->status->message == "Success"){
+        	$terms = $response->terms; 
+        	if(count($terms)){
+        		$term = $terms[0]; // grab the first one
+        		return $term->name;
+        	}
+        }
+        return 'other';
+	}
+	
+}
+
+```
+
+* Since it made sense for me to relocate the `get_artist_genre()` method to the genre model, I changed the line where it was called in the song model, and removed the redundant code:
+
+```sh
+vim application/models/admin/entity/admin_song_model.php
+```
+```php
+$song['song_genre'] = $this->genre->get_artist_genre($song['song_artist']);
+```
+
+
+* Then I chained the genre insert to the song model's `insert()` method:
+
+```php
+if(!$this->genre->exists($song['song_genre'])){
+	$this->genre->insert($song['song_genre']);
+}
+```
+
+* I cleared my local song test data once again, and confirmed this inserted records.
+
+* Finally, I added the control for the report:
+
+```sh
+vim application/models/admin/admin_ajax_model.php
+```
+
+```php
+case 'genres':
+	$data = array(
+		'groups'	=>	array(
+			array(
+				'name'	=>	'under 18',
+				'data'	=>	$this->genre->chart_by_age(false,17),
+			),
+			array(
+				'name'	=>	'ages 18-24',
+				'data'	=>	$this->genre->chart_by_age(18,24),
+			),
+			array(
+				'name'	=>	'ages 25-44',
+				'data'	=>	$this->genre->chart_by_age(25,44),
+			),
+			array(
+				'name'	=>	'ages 45-64',
+				'data'	=>	$this->genre->chart_by_age(45,64),
+			),
+			array(
+				'name'	=>	'ages 65-94',
+				'data'	=>	$this->genre->chart_by_age(65,94),
+			),
+			array(
+				'name'	=>	'ages 95+',
+				'data'	=>	$this->genre->chart_by_age(95,false),
+			),
+		),
+	);
+break;
+```
+* And the view:
+
+```sh
+vim application/views/admin/pages/reports/genres.php
+```
+
+```html
+<!--Start Breadcrumb -->
+<div id="breadcrumbs-container"></div>
+<!--End Breadcrumb-->
+<?php $this->load->view('admin/templates/blocks/guts-loader');?>
+
+<div class="row" id="guts" style="display:none;">
+
+	<?php foreach ($groups as $i=>$group): ?>
+	<div class="col-xs-12 col-sm-4">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-name">
+					<img style="width:20px" width="20" src="http://www.cornify.com/getacorn.php?r=<?php echo time()+$i;?>" />
+					<span><?php echo $group['name'];?></span>
+				</div>
+				<div class="box-icons">
+					<a class="collapse-link">
+						<i class="fa fa-chevron-up"></i>
+					</a>
+					<a class="expand-link">
+						<i class="fa fa-expand"></i>
+					</a>
+					<a class="close-link">
+						<i class="fa fa-times"></i>
+					</a>
+				</div>
+				<div class="no-move"></div>
+			</div>
+			<div class="box-content piechart-content">
+				<div class="piechart-json" style="display:none;"><?php echo json_encode($group['data']);?></div>
+				<canvas class="piechart" id="piechart-<?php echo $i;?>"></canvas>
+				<div class="piechart-legend" id="piechart-legend-<?php echo $i;?>"></div>
+			</div>
+		</div>
+	</div>
+	<?php endforeach; ?>
+
+
+</div>
+<div style="height: 40px;"></div>
+<script id="piechart-legend-template" type="text/x-handlebars-template">
+	<?php $this->load->view('admin/templates/piechart-legend');?>
+</script>
+
+<script type="text/javascript">
+// based on: https://github.com/bebraw/Chart.js.legend/blob/master/src/legend.js
+function piechart_legend(parent, data) {
+    //parent.className = 'piechart-legend';
+    var datas = data.hasOwnProperty('datasets') ? data.datasets : data;
+    // remove possible children of the parent
+    while(parent.hasChildNodes()) {
+        parent.removeChild(parent.lastChild);
+    }
+
+    var legend = $("#"+parent.getAttribute('id'));
+    var source   = $("#piechart-legend-template").html();
+	var template = Handlebars.compile(source);
+	var html = template(datas);
+	legend.html(html);
+}
+$(document).ready(function() {
+
+
+	$.getScript('/assets/js/admin/guts-global.js', function(){
+		// load breadcrumbs
+		loadCrumbs([
+		    {page: "reports", title: "Reports"},
+		    {page: "reports/genres", title: "Age Genres"}
+		 ]);
+		loadGuts();
+		
+		WinMove();
+
+		var options = {
+		    animateScale: true
+		};
+		var piechart = [];
+		$("canvas.piechart").each( function(idx,el){
+			var id = $(this).attr('id');
+			//todo: ajax this instead 
+			var data = $.parseJSON($(this).prev('.piechart-json').html());
+			var ctx = document.getElementById(id).getContext("2d");
+			piechart[idx] = new Chart(ctx).Pie(data,options);
+			piechart_legend($(this).next('.piechart-legend').get(0), data);
+		});
+		
+	});		
+});
+</script>
+```
+
+* Lastly, some css:
+
+```sh
+vim assets/css/admin/style.css
+```
+
+```css
+.songs-report th.width65,
+.songs-report td.width65{
+	width:65px !important;
+}
+
+.songs-report th.width150,
+.songs-report td.width150{
+	width:150px !important;
+}
+.songs-report th.width300,
+.songs-report td.width300{
+	width:300px !important;
+}
+
+.songs-report th.cover,
+.songs-report td.cover{
+	width:43px !important;
+}
+
+.songs-report td.cover img{
+	margin-right: 0px !important;
+}
+
+.songs-report span.cell{
+	width:100%;
+	/*white-space: nowrap;*/
+  	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.songs-report .jp-flat-audio{
+	min-width:100px;
+}
+
+.piechart-content{
+	height:180px;
+}
+
+.piechart{
+	position: absolute;
+	left: -50px;
+}
+
+.piechart-legend{
+	position:absolute;
+	top:20px;
+	left:180px;
+	font-size: 0.8em;
+}
+
+.piechart-legend-ul,
+.piechart-legend-ul li{
+	list-style-type: none;
+}
+
+.piechart-legend-ul i{
+	color:#fff;
+	padding:3px;
+	margin-bottom: 2px;
+	border-radius: 8px;
+}
+```
+
+* Cool. Now we have a nice set of pie charts on the 'Age Genres' report page. The more patients that add a favorite song, the greater the sample size.

@@ -117,7 +117,6 @@
 </div>
 <div style="height: 40px;"></div>
 
-<script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
 	$.getScript('/assets/js/admin/guts-global.js', function(){
@@ -134,11 +133,7 @@ $(document).ready(function() {
 		});
 		$('#datatable-2').on('draw', function(){
 			$.getScript('/assets/js/jquery.jplayer.js', function(){
-				var debug = true;
 				$(".jquery_jplayer").each(function(i,el){
-					if(i>0){
-						debug=false;
-					}
 			    	var player = $(this);
 					var cont = player.next(".jp_container");
 
@@ -167,10 +162,7 @@ $(document).ready(function() {
 							volumeUp: null,
 							volumeDown: null
 						},
-						wmode: "window"/*,
-						consoleAlerts: true,
-						errorAlerts: true,
-						warningAlerts: debug*/
+						wmode: "window"
 					});
 				});
 			});

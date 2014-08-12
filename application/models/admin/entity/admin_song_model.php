@@ -95,9 +95,20 @@ class admin_song_model extends CI_Model {
 	public function insert($song){
 		$song = $this->_validate($song);
 		if($song){
+			$this->load->model('admin/entity/admin_genre_model','genre');
+			$data = $this->extract($song['song_data']);
+			if(isset($data['primaryGenreName']) && !empty($data['primaryGenreName'])){
+				$song['song_genre'] = $data['primaryGenreName'];
+			} else {
+				$song['song_genre'] = $this->genre->get_artist_genre($song['song_artist']);
+			}
+			if(!$this->genre->exists($song['song_genre'])){
+				$this->genre->insert($song['song_genre']);
+			}
 			$this->db->insert('songs', array(
 				'song_name'		=>	$song['song_name'],
 				'song_artist'	=>	$song['song_artist'],
+				'song_genre'	=>	$song['song_genre'],
 				'song_data'		=>	$song['song_data'],
 			)); 
 			return $this->db->insert_id();

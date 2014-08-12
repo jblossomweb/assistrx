@@ -103,3 +103,31 @@ span.stream-url{
 .songs-report .jp-flat-audio{
 	min-width:100px;
 }
+
+.piechart-content{
+	height:180px;
+}
+
+.piechart{
+	position: absolute;
+	left: -50px;
+}
+
+.piechart-legend{
+	position:absolute;
+	top:20px;
+	left:180px;
+	font-size: 0.8em;
+}
+
+.piechart-legend-ul,
+.piechart-legend-ul li{
+	list-style-type: none;
+}
+
+.piechart-legend-ul i{
+	color:#fff;
+	padding:3px;
+	margin-bottom: 2px;
+	border-radius: 8px;
+}
