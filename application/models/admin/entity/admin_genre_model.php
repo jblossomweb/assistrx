@@ -2,6 +2,14 @@
 
 class admin_genre_model extends CI_Model {
 
+	/**
+     * Insert a new genre
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $genre_name [name of new genre]
+     * @return [string] [record id of new genre]
+     */
 	public function insert($genre_name=false){
 		if($genre_name && !empty($genre_name)){
 			$this->db->insert('genres', array(
@@ -13,6 +21,14 @@ class admin_genre_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Get the chart color for a genre
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $genre_name [name of genre]
+     * @return [string] [hex code for color]
+     */
 	public function select_chart_color($genre_name=false){
 		error_log("select_chart_color($genre_name)");
 		if($genre_name && !empty($genre_name)){
@@ -29,11 +45,24 @@ class admin_genre_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Get full genre report, formatted with color for chart.js
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @return [array] [report data]
+     */
 	public function chart_all(){
 		$genres = $this->report_all();
 		return $this->chart_js($genres);
 	}
-
+	/**
+     * Get full genre report
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @return [array] [report data]
+     */
 	public function report_all(){
 		/*
 		SELECT 
@@ -60,11 +89,29 @@ class admin_genre_model extends CI_Model {
 		return $genres;
 	}
 
+	/**
+     * Get age genre report, formatted with color for chart.js
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $start_age [beginning of age range, false for 0]
+     * @param  [int] $end_age [end of age range, false for infinity]
+     * @return [array] [report data]
+     */
 	public function chart_by_age($start_age=false,$end_age=false){
 		$genres = $this->report_by_age($start_age,$end_age);
 		return $this->chart_js($genres);
 	}
 
+	/**
+     * Get age genre report
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $start_age [beginning of age range, false for 0]
+     * @param  [int] $end_age [end of age range, false for infinity]
+     * @return [array] [report data]
+     */
 	public function report_by_age($start_age=false,$end_age=false){
 		/*
 		SELECT 
@@ -104,6 +151,14 @@ class admin_genre_model extends CI_Model {
 		return $genres;
 	}
 
+	/**
+     * Format a genre report with color for chart.js 
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $genres [report data]
+     * @return [array] [report data]
+     */
 	public function chart_js($genres){
 		$return = array();
 		foreach($genres as $i=>$genre){
@@ -116,6 +171,14 @@ class admin_genre_model extends CI_Model {
 		return $return;
 	}
 
+	/**
+     * check if genre exists
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $genre_name [name of genre]
+     * @return [boolean] [true if exists, false if not]
+     */
 	public function exists($genre_name){
     	$this->db->where('genre_name',$genre_name);
 		$ar = $this->db->get('genres');
@@ -126,6 +189,15 @@ class admin_genre_model extends CI_Model {
 		}
     }
 
+    /**
+     * get the genre of a song's artist from EchoNest API
+     * todo: build an echonest library and/or model class
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $artist [name of artist]
+     * @return [string] [name of genre]
+     */
     public function get_artist_genre($artist){
     	//ideally I should cache this in an artists table
 		$artist = strtolower($artist);
