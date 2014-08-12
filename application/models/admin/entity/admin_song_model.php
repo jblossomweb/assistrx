@@ -8,13 +8,13 @@ class admin_song_model extends CI_Model {
 	}
 
 	/**
-     * TODO: comment this function (save_song_for_patient)
+     * Associates a patient to a selected song.
      *
-     * @author hopeful candadite
-     * @since  date
-     * @param  [type] $patient_id [description]
-     * @param  [type] $song_data [description]
-     * @return [type] [description]
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $patient_id [id of the patient record]
+     * @param  [string] $song_data [json-formatted song data]
+     * @return [boolean] [success]
      */
     public function associate($patient_id, $song_data){
     	// if patient didn't exist, return some type of error
@@ -37,7 +37,13 @@ class admin_song_model extends CI_Model {
 		return $updated;
     }
 
-
+    /**
+     * Deletes any unassigned songs.
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @return [boolean] [success]
+     */
     public function cleanup(){
     	/*
     	DELETE
@@ -66,6 +72,14 @@ class admin_song_model extends CI_Model {
 		$this->db->delete('songs');
     }
 
+    /**
+     * Determines whether a song exists
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $song_data [json-formatted song data]
+     * @return [int] [id of the found song record, false if not found]
+     */
     public function exists($song_data){
     	if(is_array($song_data)){
     		$song_data = json_encode($song_data);
@@ -82,6 +96,14 @@ class admin_song_model extends CI_Model {
 		}
     }
 
+    /**
+     * Determines whether a patient exists
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $patient_id [id of the patient record]
+     * @return [boolean] [true if patient exists]
+     */
     public function patient_exists($patient_id){
     	$this->db->where('patient_id',$patient_id);
 		$ar = $this->db->get('patients');
@@ -92,6 +114,14 @@ class admin_song_model extends CI_Model {
 		}
     }
 	
+	/**
+     * Insert a new song.
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $song [array containing name, artist, song_data]
+     * @return [int] [id of the newly created song record, false if error]
+     */
 	public function insert($song){
 		$song = $this->_validate($song);
 		if($song){
@@ -116,6 +146,14 @@ class admin_song_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Select a song record by its id.
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $id [id of the song record]
+     * @return [array] [id, name, artist, data]
+     */
 	public function select($id){
 		if($id){
 			$this->db->select('
@@ -135,6 +173,14 @@ class admin_song_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Select a song record by patient id.
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] $pid [id of the patient record]
+     * @return [array] [id, name, artist, data]
+     */
 	public function select_by_patient($pid){
 		if($pid){
 			$this->db->select('
@@ -155,6 +201,13 @@ class admin_song_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * List all songs
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @return [array] [array: id, name, artist]
+     */
 	public function list_all(){
 		$this->db->select('
 			s.song_id as id, 
@@ -167,6 +220,14 @@ class admin_song_model extends CI_Model {
 		return $songs;
 	}
 
+	/**
+     * Extract song data
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $song [array containing song_data]
+     * @return [array] $song [song array with new data fields]
+     */
 	public function extract($song){
 		if(is_array($song)){
 			if(isset($song['data']) && !empty($song['data'])){
@@ -182,6 +243,14 @@ class admin_song_model extends CI_Model {
 		return $song;
 	}
 
+	/**
+     * PRIVATE method: validate for insert
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $data [array containing song_data]
+     * @return [array] [song array with new data fields]
+     */
 	private function _validate($data){
 		extract($data);
 		if(empty($song_name)){
