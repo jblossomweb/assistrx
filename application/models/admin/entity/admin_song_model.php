@@ -248,8 +248,8 @@ class admin_song_model extends CI_Model {
      *
      * @author John Blossom
      * @since  8/12/2014
-     * @param  [array] $data [array containing song_data]
-     * @return [array] [song array with new data fields]
+     * @param  [array] $data
+     * @return [array] [false if error]
      */
 	private function _validate($data){
 		extract($data);

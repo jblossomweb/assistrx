@@ -15,6 +15,14 @@ class admin_ajax_model extends CI_Model {
 		);
 		return $data;
 	}
+	/**
+     * patients ajax model
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $sub [page indicating data to retrieve]
+     * @return [array] [data for indicated page]
+     */
 	public function patients($sub='list'){
 		$this->load->model('admin/entity/admin_patient_model','patient');
 		switch($sub){
@@ -97,6 +105,14 @@ class admin_ajax_model extends CI_Model {
 		}
 		return $data;
 	}
+	/**
+     * reports ajax model
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [string] $sub [page indicating data to retrieve]
+     * @return [array] [data for indicated page]
+     */
 	public function reports($sub='list'){
 		$this->load->model('admin/entity/admin_patient_model','patient');
 		$this->load->model('admin/entity/admin_genre_model','genre');

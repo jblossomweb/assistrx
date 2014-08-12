@@ -7,6 +7,14 @@ class admin_patient_model extends CI_Model {
 		$this->load->database();
 	}
 	
+	/**
+     * Insert a new patient
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $data [new patient data: name, age, phone]
+     * @return [int] [record id of new patient, false if error]
+     */
 	public function insert($data){
 		$data = $this->_validate($data);
 		if($data){
@@ -20,6 +28,15 @@ class admin_patient_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Update existing patient
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] 	$id 	[record id of patient to update]
+     * @param  [array] 	$data 	[updated patient data: name, age, phone]
+     * @return [int] 			[record id of updated patient, false if error]
+     */
 	public function update($id,$data){
 		$data = $this->_validate($data);
 		if($data){
@@ -36,6 +53,14 @@ class admin_patient_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * Select patient record
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] 	$id 	[record id of patient]
+     * @return [array] 	$data 	[patient data: id, name, age, phone]
+     */
 	public function select($id=false){
 		if($id){
 			$this->db->select('
@@ -52,6 +77,13 @@ class admin_patient_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * List all patients
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @return [array]	[array of patient records]
+     */
 	public function list_all(){
 		$this->db->select('
 			patient_id as id, 
@@ -65,6 +97,14 @@ class admin_patient_model extends CI_Model {
 		return $patients;
 	}
 
+	/**
+     * List songs belonging to patients
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [int] 	$id 	[optional record id of patient]
+     * @return [array]	[array of patient records]
+     */
 	public function list_songs($id=false){
 
 		$this->load->model('admin/entity/admin_song_model','song');
@@ -108,6 +148,14 @@ class admin_patient_model extends CI_Model {
 		return false;
 	}
 
+	/**
+     * PRIVATE method: validate for insert
+     *
+     * @author John Blossom
+     * @since  8/12/2014
+     * @param  [array] $data 
+     * @return [array] [false if error]
+     */
 	private function _validate($data){
 		extract($data);
 		if(empty($name) || !preg_match('/^[a-zA-Z0-9_\.\- ]+$/',$name)){
