@@ -10,6 +10,12 @@ $(function(){
 		validateUser(username, password);
 		return false;
 	});
+
+	$("#page-login input").keyup(function(event){
+	    if(event.keyCode == 13){
+	        $("#btnLogin").click();
+	    }
+	});
 	
 });
 
