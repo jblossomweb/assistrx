@@ -22,4 +22,8 @@
 		'icon'	=>	"fa-phone",
 	));?>
 </fieldset>
+{{#if patient.id}}
 <?php $this->load->view('admin/templates/blocks/select-song');?>
+{{else}}
+<?php $this->load->view('admin/templates/blocks/cancel-submit');?>
+{{/if}}
