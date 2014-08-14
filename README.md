@@ -1,7 +1,7 @@
 
 
 
-<img src="public/arx_logo.png" style="float:right;width: 175px;height: 175px;" />
+<img src="https://raw.githubusercontent.com/jblossomweb/assistrx/master/public/arx_logo.png" style="float:right;width: 175px;height: 175px;" />
 
 <h1 style="float:left;padding-top:50px;">
     AssistRx PHP Coding Test
