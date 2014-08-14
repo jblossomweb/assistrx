@@ -14,10 +14,6 @@ $(function(){
 });
 
 function validateUser(username, password){
-	//call the validate service
-
-	console.log('validateUser('+username+', '+password+')');
-
 	$.ajax({
 		async: false,
 		url: '/admin/validate_user',
@@ -29,8 +25,9 @@ function validateUser(username, password){
 				// User has been validated. Redirect to dashboard.
 				window.location.href='/admin/dashboard';
 			}else if(res.status == 'ERROR'){
-				console.log('Ajax error: '+res.error_msg);
-				console.log(res);
+				//console.log('Ajax error: '+res.error_msg);
+				//console.log(res);
+				$("#login-console").html(res.error_msg);
 			}else{
 				console.log('Ajax error. Invalid status.');
 				console.log(res);

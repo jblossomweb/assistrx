@@ -1,3 +1,12 @@
+#login-console{
+	color:red;
+	font-style: italic;
+	font-size: .8em;
+	font-weight: bold;
+	width: 100%;
+	text-align:center;
+}
+
 #logo a {
 	background:transparent;
 }

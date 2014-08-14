@@ -11,6 +11,7 @@
 		<link href='http://fonts.googleapis.com/css?family=Righteous' rel='stylesheet' type='text/css'>
 		<link href="/assets/devoops/css/style.css" rel="stylesheet">
 		<link href="/assets/css/admin/font.css" rel="stylesheet">
+		<link href="/assets/css/admin/style.css" rel="stylesheet">
 		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!--[if lt IE 9]>
 				<script src="http://getbootstrap.com/docs-assets/js/html5shiv.js"></script>
@@ -29,16 +30,17 @@
 					<div class="text-center">
 						<h3 class="page-header"><img src="/assets/images/logo.png" width="25">&nbsp;<span class="font-myriad">AssistRx Admin Login</span></h3>
 					</div>
+					<div id="login-console"></div>
 					<div class="form-group">
 						<label class="control-label">Username</label>
-						<input type="text" class="form-control" name="username" />
+						<input type="text" class="form-control" name="username" tabindex="1" />
 					</div>
 					<div class="form-group">
 						<label class="control-label">Password</label>
-						<input type="password" class="form-control" name="password" />
+						<input type="password" class="form-control" name="password" tabindex="2" />
 					</div>
 					<div class="text-center">
-						<a id="btnLogin" style="cursor:pointer;" class="btn btn-primary">Sign in</a>
+						<a id="btnLogin" style="cursor:pointer;" class="btn btn-primary" tabindex="3">Sign in</a>
 					</div>
 				</div>
 			</div>
